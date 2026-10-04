@@ -18,6 +18,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as CarsSlugRouteImport } from './routes/cars.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
+import { Route as AuthenticatedAdminCarsIdRouteImport } from './routes/_authenticated/admin.cars.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,12 @@ const AuthenticatedAdminRequestsRoute =
     path: '/requests',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCarsIdRoute =
+  AuthenticatedAdminCarsIdRouteImport.update({
+    id: '/cars/$id',
+    path: '/cars/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/cars/$slug': typeof CarsSlugRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/cars/$id': typeof AuthenticatedAdminCarsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/cars/$slug': typeof CarsSlugRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/cars/$id': typeof AuthenticatedAdminCarsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/cars/$slug': typeof CarsSlugRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/cars/$id': typeof AuthenticatedAdminCarsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/cars/$slug'
     | '/admin/requests'
     | '/admin/'
+    | '/admin/cars/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/cars/$slug'
     | '/admin/requests'
     | '/admin'
+    | '/admin/cars/$id'
   id:
     | '__root__'
     | '/'
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
     | '/cars/$slug'
     | '/_authenticated/admin/requests'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/cars/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -203,17 +216,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/cars/$id': {
+      id: '/_authenticated/admin/cars/$id'
+      path: '/cars/$id'
+      fullPath: '/admin/cars/$id'
+      preLoaderRoute: typeof AuthenticatedAdminCarsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminCarsIdRoute: typeof AuthenticatedAdminCarsIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminCarsIdRoute: AuthenticatedAdminCarsIdRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
