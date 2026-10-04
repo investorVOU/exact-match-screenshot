@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { CalendarCheck, ChevronLeft, MessageCircle, Phone } from "lucide-react";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/cars/$slug")({
   loader: async ({ context, params }) => {
     const res = await context.queryClient.ensureQueryData(carQuery(params.slug));
     if (!res.car) throw notFound();
-    return { title: carName(res.car), price: res.car.price, image: res.car.images[0], description: res.car.description, condition: res.car.condition };
+    return { data: res, title: carName(res.car), price: res.car.price, image: res.car.images[0], description: res.car.description, condition: res.car.condition };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Car not found — Rush Autos" }, { name: "robots", content: "noindex" }] };
@@ -50,8 +50,7 @@ export const Route = createFileRoute("/cars/$slug")({
 });
 
 function CarPage() {
-  const { slug } = Route.useParams();
-  const { data } = useSuspenseQuery(carQuery(slug));
+  const { data } = Route.useLoaderData();
   const car = data.car!;
   const name = carName(car);
   const price = formatNaira(car.price);

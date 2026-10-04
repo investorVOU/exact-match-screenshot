@@ -23,10 +23,11 @@ export const Route = createFileRoute("/")({
   },
   loaderDeps: ({ search }) => search,
   loader: async ({ context, deps }) => {
-    await Promise.all([
+    const [cars, brands] = await Promise.all([
       context.queryClient.ensureQueryData(carsQuery(listFiltersSchema.parse(deps))),
       context.queryClient.ensureQueryData(brandsQuery),
     ]);
+    return { cars, brands };
   },
   head: () => ({
     meta: [
@@ -55,8 +56,9 @@ function Index() {
   const search = Route.useSearch();
   const filters = listFiltersSchema.parse(search);
   const navigate = useNavigate({ from: "/" });
-  const { data, isFetching } = useQuery({ ...carsQuery(filters), placeholderData: keepPreviousData });
-  const { data: brands = [] } = useQuery(brandsQuery);
+  const loaded = Route.useLoaderData();
+  const { data, isFetching } = useQuery({ ...carsQuery(filters), initialData: loaded.cars, placeholderData: keepPreviousData });
+  const { data: brands = [] } = useQuery({ ...brandsQuery, initialData: loaded.brands });
   const [q, setQ] = useState(filters.q);
   const listRef = useRef<HTMLDivElement>(null);
   const firstRender = useRef(true);
