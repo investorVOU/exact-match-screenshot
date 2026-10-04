@@ -113,7 +113,7 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
               <Phone className="h-3.5 w-3.5" />Call
             </a>
             <a href={waLink(msg)} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp", name)} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-whatsapp text-xs font-semibold text-whatsapp-foreground active:scale-95">
-              <MessageCircle className="h-3.5 w-3.5" />WhatsApp
+              <MessageCircle className="h-3.5 w-3.5 shrink-0" /><span className="truncate">WhatsApp</span>
             </a>
           </div>
         )}
