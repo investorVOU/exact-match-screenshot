@@ -67,16 +67,16 @@ function CarForm() {
   };
   const move = (from: number, to: number) => setPhotos((p) => {
     if (to < 0 || to >= p.length) return p;
-    const n = [...p]; const [x] = n.splice(from, 1); n.splice(to, 0, x); return n;
+    const n = [...p]; const [x] = n.splice(from, 1); if (x) n.splice(to, 0, x); return n;
   });
   const removePhoto = (i: number) => setPhotos((p) => {
-    const ph = p[i]; if (ph.path) setRemoved((r) => [...r, ph.path!]);
+    const ph = p[i]; if (ph?.path) setRemoved((r) => [...r, ph.path as string]);
     return p.filter((_, k) => k !== i);
   });
 
-  const save = async (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (!photos.length) return toast.error("Add at least one photo.");
+    if (!photos.length) { toast.error("Add at least one photo."); return; }
     setBusy(true);
     try {
       const payload = { ...f, color: f.color || null, engine_size: f.engine_size || null, description: f.description || null };

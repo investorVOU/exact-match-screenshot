@@ -24,10 +24,10 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
   if (!n) return <div className="aspect-[4/3] rounded-2xl bg-muted" />;
 
   const swipe = {
-    onTouchStart: (e: React.TouchEvent) => { touchX.current = e.touches[0].clientX; },
+    onTouchStart: (e: React.TouchEvent) => { touchX.current = e.touches[0]?.clientX ?? null; },
     onTouchEnd: (e: React.TouchEvent) => {
       if (touchX.current == null) return;
-      const dx = e.changedTouches[0].clientX - touchX.current;
+      const dx = (e.changedTouches[0]?.clientX ?? touchX.current) - touchX.current;
       if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
       touchX.current = null;
     },

@@ -46,7 +46,7 @@ export const Route = createFileRoute("/cars/$slug")({
       </div>
     </div>
   ),
-  errorComponent: ({ error }) => <div role="alert" className="p-6">Couldn't load this car: {error.message}</div>,
+  errorComponent: ({ error }) => <div role="alert" className="p-6">Couldn't load this car: {(error as Error).message}</div>,
 });
 
 function CarPage() {

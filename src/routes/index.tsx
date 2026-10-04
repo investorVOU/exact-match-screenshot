@@ -18,7 +18,7 @@ const searchSchema = listFiltersSchema.extend({
 
 export const Route = createFileRoute("/")({
   validateSearch: (s: Record<string, unknown>) => {
-    const r = searchSchema.safeParse({ ...s, max: s.max ? Number(s.max) : undefined, page: s.page ? Number(s.page) : undefined });
+    const r = searchSchema.safeParse({ ...s, max: s["max"] ? Number(s["max"]) : undefined, page: s["page"] ? Number(s["page"]) : undefined });
     return r.success ? r.data : {};
   },
   loaderDeps: ({ search }) => search,
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/")({
     ],
   }),
   component: Index,
-  errorComponent: ({ error }) => <div role="alert" className="p-6">Couldn't load cars: {error.message}</div>,
+  errorComponent: ({ error }) => <div role="alert" className="p-6">Couldn't load cars: {(error as Error).message}</div>,
   notFoundComponent: () => <div className="p-6">Nothing here.</div>,
 });
 
@@ -160,7 +160,7 @@ function Index() {
               .filter((p) => p === 1 || p === pages || Math.abs(p - filters.page) <= 1)
               .map((p, i, arr) => (
                 <span key={p} className="flex items-center gap-1.5">
-                  {i > 0 && p - arr[i - 1] > 1 && <span className="text-muted-foreground">…</span>}
+                  {i > 0 && p - (arr[i - 1] ?? p) > 1 && <span className="text-muted-foreground">…</span>}
                   <button onClick={() => goPage(p)} aria-current={p === filters.page ? "page" : undefined}
                     className={`h-11 w-11 rounded-full text-sm font-bold ${p === filters.page ? "bg-primary text-primary-foreground" : "bg-card shadow-card"}`}>
                     {p}
