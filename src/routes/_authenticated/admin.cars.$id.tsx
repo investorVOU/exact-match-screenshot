@@ -11,7 +11,7 @@ type Photo = { key: string; url: string; path?: string | null; file?: Blob };
 const MAX_PHOTOS = 12;
 const empty = {
   make: "", model: "", year: new Date().getFullYear() - 8, price: 0, mileage: 0, transmission: "Automatic", fuel: "Petrol",
-  body_type: "Sedan", condition: "Foreign Used", color: "", engine_size: "", location: "Lagos", description: "", status: "Available",
+  body_type: "Sedan", condition: "Foreign Used", color: "", engine_size: "", location: "Abuja", description: "", status: "Available",
 };
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

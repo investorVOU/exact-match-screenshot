@@ -153,7 +153,7 @@ export function SiteFooter() {
         <p className="flex items-center gap-2 opacity-90"><MapPin className="h-4 w-4" />{BUSINESS.address}</p>
         <p className="opacity-90"><a href={telLink()} className="underline">{displayPhone()}</a></p>
         <p className="pt-2"><Link to="/request" className="font-semibold text-highlight underline">Can't find your car? Request it →</Link></p>
-        <p className="pt-2 text-xs opacity-60">© {new Date().getFullYear()} {BUSINESS.name}. Lagos, Nigeria.</p>
+        <p className="pt-2 text-xs opacity-60">© {new Date().getFullYear()} {BUSINESS.name}. Abuja, Nigeria.</p>
       </div>
     </footer>
   );

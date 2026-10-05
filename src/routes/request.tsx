@@ -9,8 +9,8 @@ import { track } from "@/lib/pixel";
 export const Route = createFileRoute("/request")({
   head: () => ({
     meta: [
-      { title: "Request a Car — Rush Autos Lagos" },
-      { name: "description", content: "Tell Rush Autos the car you want and your budget. We'll source a Tokunbo or Nigerian used car for you in Lagos." },
+      { title: "Request a Car — Rush Autos Abuja" },
+      { name: "description", content: "Tell Rush Autos the car you want and your budget. We'll source a Tokunbo or Nigerian used car for you in Abuja." },
       { property: "og:title", content: "Request a Car — Rush Autos" },
       { property: "og:description", content: "Can't find it? Tell us the car and budget and we'll source it for you." },
       { property: "og:type", content: "website" },

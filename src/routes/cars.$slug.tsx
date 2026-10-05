@@ -22,7 +22,7 @@ export const Route = createFileRoute("/cars/$slug")({
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Car not found — Rush Autos" }, { name: "robots", content: "noindex" }] };
     const title = `${loaderData.title} — ${formatNaira(loaderData.price)} | Rush Autos`;
-    const desc = `${loaderData.condition} ${loaderData.title} for ${formatNaira(loaderData.price)} in Lagos. ${loaderData.description ?? ""}`.slice(0, 160);
+    const desc = `${loaderData.condition} ${loaderData.title} for ${formatNaira(loaderData.price)} in Abuja. ${loaderData.description ?? ""}`.slice(0, 160);
     const img = loaderData.image ? absUrl(loaderData.image) : undefined;
     return {
       meta: [
