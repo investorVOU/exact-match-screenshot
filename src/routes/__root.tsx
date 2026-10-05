@@ -75,6 +75,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     }),
   head: ({ loaderData }) => {
     const id = effectivePixelId(loaderData?.pixelId);
+    const adsenseClientId = loaderData?.adsenseClientId ?? "";
     return {
       meta: [
         { charSet: "utf-8" },
@@ -85,6 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { property: "og:site_name", content: "Rush Autos" },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
+        ...(adsenseClientId ? [{ name: "google-adsense-account", content: adsenseClientId }] : []),
       ],
       links: [
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -96,7 +98,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: appCss },
         { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       ],
-      scripts: pixelIdValid(id) ? [{ children: pixelScript(id) }] : [],
+      scripts: [
+        ...(pixelIdValid(id) ? [{ children: pixelScript(id) }] : []),
+        ...(adsenseClientId
+          ? [
+              {
+                src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`,
+                async: true,
+                crossOrigin: "anonymous" as const,
+              },
+            ]
+          : []),
+      ],
     };
   },
   shellComponent: RootShell,
