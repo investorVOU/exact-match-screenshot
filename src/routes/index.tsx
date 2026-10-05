@@ -148,7 +148,7 @@ function Index() {
             </a>
           </div>
         ) : (
-          <div className={`mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4 ${isFetching ? "opacity-60" : ""} transition-opacity`}>
+          <div className={`mt-3 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 lg:grid-cols-[repeat(4,minmax(0,1fr))] ${isFetching ? "opacity-60" : ""} transition-opacity`}>
             {data?.cars.map((c, i) => <CarCard key={c.id} car={c} eager={i < 2} />)}
           </div>
         )}

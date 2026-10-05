@@ -1,24 +1,20 @@
-# Exact Match Screenshot
+# Rush Autos
 
-Implement exactly the screenshot and nothing else
+Car listings for Rush Autos in Abuja, built with TanStack Start, React, and Supabase.
 
-This project was built with [Lovable](https://lovable.dev).
+## Local development
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f83ac775-5dfb-4676-91dd-8b4b5dd1e7dc).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requires Node.js 22 or later.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+npm install
 npm run dev
 ```
+
+Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the environment. Add all five to Render when prompted; the service-role key is secret and must never use a `VITE_` prefix.
+
+## Deploy to Render
+
+This repository includes a Render Blueprint in `render.yaml`. In Render, create a new Blueprint and select this repository. Add the Supabase values when prompted, then deploy. The app runs as a Node web service using Nitro's `node-server` preset.
+
+Update the business phone, address, site URL, and other public business details in `src/config/business.ts` before going live. Configure Supabase authentication, database policies, and storage for the production domain as well.

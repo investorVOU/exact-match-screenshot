@@ -76,7 +76,7 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
   const sold = car.status === "Sold";
   const msg = `Hello, I'm interested in the ${name} (${formatNaira(car.price)}). Is it available?`;
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl bg-card shadow-card">
+    <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-card shadow-card">
       <Link to="/cars/$slug" params={{ slug: car.slug }} className="relative block aspect-[4/3] bg-muted">
         {car.images[0] && (
           <img
@@ -102,18 +102,18 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-2.5 sm:p-3">
         <p className="font-price text-base font-extrabold text-primary sm:text-lg">{formatNaira(car.price)}</p>
-        <Link to="/cars/$slug" params={{ slug: car.slug }} className="line-clamp-2 text-sm font-semibold leading-tight">
+        <Link to="/cars/$slug" params={{ slug: car.slug }} className="line-clamp-2 min-w-0 text-sm font-semibold leading-tight wrap-anywhere">
           {name}
         </Link>
         <p className="text-[11px] text-muted-foreground">{car.mileage.toLocaleString()} km · {car.transmission}</p>
         <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{car.location}</p>
         {!sold && (
-          <div className="mt-auto grid grid-cols-2 gap-1.5 pt-2">
-            <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-secondary px-1 text-xs font-semibold active:scale-95">
+          <div className="mt-auto grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-1.5 pt-2">
+            <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-secondary px-1 text-xs font-semibold active:scale-95">
               <Phone className="h-3.5 w-3.5 shrink-0" />Call
             </a>
-            <a href={waLink(msg)} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp", name)} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-whatsapp px-1 text-xs font-semibold text-whatsapp-foreground active:scale-95">
-              <MessageCircle className="h-3.5 w-3.5 shrink-0" /><span className="whitespace-nowrap">WhatsApp</span>
+            <a href={waLink(msg)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp about ${name}`} title={`WhatsApp about ${name}`} onClick={() => trackContact("whatsapp", name)} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-whatsapp px-1 text-xs font-semibold text-whatsapp-foreground active:scale-95">
+              <MessageCircle className="h-3.5 w-3.5 shrink-0" /><span className="hidden whitespace-nowrap sm:inline">WhatsApp</span>
             </a>
           </div>
         )}

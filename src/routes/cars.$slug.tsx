@@ -94,14 +94,14 @@ function CarPage() {
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 pt-3">
         <Link to="/" className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground"><ChevronLeft className="h-4 w-4" />All cars</Link>
-        <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-          <Gallery images={car.images} alt={name} />
-          <div>
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+          <div className="min-w-0"><Gallery images={car.images} alt={name} /></div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <ConditionBadge condition={car.condition} />
               {sold && <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">Sold</span>}
             </div>
-            <h1 className="mt-2 text-2xl font-extrabold leading-tight sm:text-3xl">{name}</h1>
+            <h1 className="mt-2 text-2xl font-extrabold leading-tight wrap-anywhere sm:text-3xl">{name}</h1>
             <p className="font-price mt-1 text-3xl font-extrabold text-primary">{price}</p>
 
             {!sold && (
@@ -138,14 +138,14 @@ function CarPage() {
               {specs.filter(([, v]) => v).map(([k, v]) => (
                 <div key={k} className="rounded-xl bg-card p-3 shadow-card">
                   <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{k}</dt>
-                  <dd className="text-sm font-semibold">{v}</dd>
+                  <dd className="text-sm font-semibold wrap-anywhere">{v}</dd>
                 </div>
               ))}
             </dl>
             {car.description && (
-              <div className="mt-5">
+              <div className="mt-5 min-w-0">
                 <h2 className="text-lg font-bold">Description</h2>
-                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{car.description}</p>
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-muted-foreground wrap-anywhere">{car.description}</p>
               </div>
             )}
           </div>
@@ -154,7 +154,7 @@ function CarPage() {
         {data.similar.length > 0 && (
           <section className="mt-10">
             <h2 className="text-xl font-extrabold">Similar cars</h2>
-            <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="mt-3 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
               {data.similar.map((c) => <CarCard key={c.id} car={c} />)}
             </div>
           </section>
