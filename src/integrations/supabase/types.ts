@@ -177,18 +177,21 @@ export type Database = {
       site_settings: {
         Row: {
           adsense_client_id: string
+          google_analytics_id: string
           id: number
           pixel_id: string
           updated_at: string
         }
         Insert: {
           adsense_client_id?: string
+          google_analytics_id?: string
           id?: number
           pixel_id?: string
           updated_at?: string
         }
         Update: {
           adsense_client_id?: string
+          google_analytics_id?: string
           id?: number
           pixel_id?: string
           updated_at?: string

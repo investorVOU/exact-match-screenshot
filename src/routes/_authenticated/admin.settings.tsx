@@ -5,6 +5,7 @@ import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { extractAdsensePublisherId } from "@/lib/adsense";
+import { extractGoogleAnalyticsId } from "@/lib/google-analytics";
 import { pixelIdValid } from "@/lib/pixel";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
@@ -15,15 +16,17 @@ function AdminSettings() {
   const queryClient = useQueryClient();
   const [pixelId, setPixelId] = useState("");
   const [adsenseCode, setAdsenseCode] = useState("");
+  const [googleAnalyticsCode, setGoogleAnalyticsCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingAdsense, setSavingAdsense] = useState(false);
+  const [savingGoogleAnalytics, setSavingGoogleAnalytics] = useState(false);
 
   useEffect(() => {
     let active = true;
     void supabase
       .from("site_settings")
-      .select("pixel_id, adsense_client_id")
+      .select("pixel_id, adsense_client_id, google_analytics_id")
       .eq("id", 1)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -32,6 +35,7 @@ function AdminSettings() {
         else {
           setPixelId(data?.pixel_id ?? "");
           setAdsenseCode(data?.adsense_client_id ?? "");
+          setGoogleAnalyticsCode(data?.google_analytics_id ?? "");
         }
         setLoading(false);
       });
@@ -86,6 +90,31 @@ function AdminSettings() {
       setAdsenseCode(publisherId);
       await queryClient.invalidateQueries({ queryKey: ["site-settings"] });
       toast.success(publisherId ? "AdSense saved" : "AdSense disabled");
+    }
+  };
+
+  const saveGoogleAnalytics = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const measurementId = extractGoogleAnalyticsId(googleAnalyticsCode);
+    if (measurementId === null) {
+      toast.error("Enter a valid GA4 Measurement ID or Google tag snippet.");
+      return;
+    }
+    setSavingGoogleAnalytics(true);
+    const { error } = await supabase.from("site_settings").upsert(
+      {
+        id: 1,
+        google_analytics_id: measurementId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" },
+    );
+    setSavingGoogleAnalytics(false);
+    if (error) toast.error(error.message);
+    else {
+      setGoogleAnalyticsCode(measurementId);
+      await queryClient.invalidateQueries({ queryKey: ["site-settings"] });
+      toast.success(measurementId ? "Google Analytics saved" : "Google Analytics disabled");
     }
   };
 
@@ -156,6 +185,35 @@ function AdminSettings() {
           >
             <Save className="h-4 w-4" />
             {savingAdsense ? "Saving…" : "Save AdSense"}
+          </button>
+        </form>
+      </section>
+      <section className="mt-4 rounded-2xl bg-card p-4 shadow-card sm:p-6">
+        <h2 className="text-lg font-bold">Google Analytics</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Paste your GA4 Measurement ID or the Google tag snippet from Analytics.
+        </p>
+        <form onSubmit={saveGoogleAnalytics} className="mt-5 space-y-4">
+          <label className="block text-sm font-semibold">
+            Measurement ID or code
+            <textarea
+              value={googleAnalyticsCode}
+              onChange={(e) => setGoogleAnalyticsCode(e.target.value)}
+              placeholder="G-ABC123XYZ9"
+              disabled={loading || savingGoogleAnalytics}
+              rows={4}
+              className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 font-mono text-sm font-normal"
+            />
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Only the measurement ID is stored. Leave blank to disable Google Analytics.
+          </p>
+          <button
+            disabled={loading || savingGoogleAnalytics}
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" />
+            {savingGoogleAnalytics ? "Saving…" : "Save Google Analytics"}
           </button>
         </form>
       </section>

@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { effectivePixelId, pixelIdValid, pixelScript, track } from "@/lib/pixel";
 import { getSiteSettings } from "@/lib/settings.functions";
+import { googleAnalyticsScript } from "@/lib/google-analytics";
 import { BottomNav } from "@/components/site";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -76,6 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: ({ loaderData }) => {
     const id = effectivePixelId(loaderData?.pixelId);
     const adsenseClientId = loaderData?.adsenseClientId ?? "";
+    const googleAnalyticsId = loaderData?.googleAnalyticsId ?? "";
     return {
       meta: [
         { charSet: "utf-8" },
@@ -100,6 +102,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ],
       scripts: [
         ...(pixelIdValid(id) ? [{ children: pixelScript(id) }] : []),
+        ...(googleAnalyticsId
+          ? [
+              {
+                children: googleAnalyticsScript(googleAnalyticsId),
+              },
+              {
+                src: `https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`,
+                async: true,
+              },
+            ]
+          : []),
         ...(adsenseClientId
           ? [
               {
@@ -134,12 +147,21 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { googleAnalyticsId } = Route.useLoaderData();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/auth");
 
   useEffect(() => {
-    if (!isAdmin) track("PageView");
-  }, [isAdmin, pathname]);
+    if (isAdmin) return;
+    track("PageView");
+    if (!googleAnalyticsId) return;
+    const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
+    gtag?.("event", "page_view", {
+      page_path: pathname,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }, [googleAnalyticsId, isAdmin, pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>

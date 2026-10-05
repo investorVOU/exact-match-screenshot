@@ -6,14 +6,15 @@ export const getSiteSettings = createServerFn({ method: "GET" }).handler(async (
   try {
     const { data } = await publicDb()
       .from("site_settings")
-      .select("pixel_id, adsense_client_id")
+      .select("pixel_id, adsense_client_id, google_analytics_id")
       .eq("id", 1)
       .maybeSingle();
     return {
       pixelId: data?.pixel_id ?? "",
       adsenseClientId: data?.adsense_client_id ?? "",
+      googleAnalyticsId: data?.google_analytics_id ?? "",
     };
   } catch {
-    return { pixelId: "", adsenseClientId: "" };
+    return { pixelId: "", adsenseClientId: "", googleAnalyticsId: "" };
   }
 });
