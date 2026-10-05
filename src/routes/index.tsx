@@ -31,9 +31,9 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "Rush Autos — Used Cars for Sale in Lagos | Tokunbo & Nigerian Used" },
-      { name: "description", content: "Browse foreign used (Tokunbo) and Nigerian used cars in Lagos. Real photos, real prices. Call or WhatsApp Rush Autos and inspect before you pay." },
-      { property: "og:title", content: "Rush Autos — Find your next car in Lagos" },
+      { title: "Rush Autos — Used Cars for Sale in Abuja | Tokunbo & Nigerian Used" },
+      { name: "description", content: "Browse foreign used (Tokunbo) and Nigerian used cars in Abuja. Real photos, real prices. Call or WhatsApp Rush Autos and inspect before you pay." },
+      { property: "og:title", content: "Rush Autos — Find your next car in Abuja" },
       { property: "og:description", content: "Tokunbo and Nigerian used cars. Inspect before you pay. Call or WhatsApp us." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -93,7 +93,7 @@ function Index() {
             Find your next car. <span className="text-highlight">Inspect before you pay.</span>
           </h1>
           <p className="mt-3 max-w-xl text-sm opacity-85 sm:text-base">
-            Quality Foreign Used (Tokunbo) and Nigerian Used cars in Lagos, with real photos and honest prices.
+            Quality Foreign Used (Tokunbo) and Nigerian Used cars in Abuja, with real photos and honest prices.
           </p>
         </div>
       </section>

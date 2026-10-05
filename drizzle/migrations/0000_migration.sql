@@ -10,7 +10,7 @@ grant execute on function public.admin_exists() to anon, authenticated;
 create table public.cars (
  id uuid primary key default gen_random_uuid(), slug text not null unique, make text not null, model text not null, year int not null, price bigint not null,
  mileage int not null default 0, transmission text not null default 'Automatic', fuel text not null default 'Petrol', body_type text not null default 'Sedan',
- condition text not null default 'Foreign Used', color text, engine_size text, location text not null default 'Lagos', description text,
+ condition text not null default 'Foreign Used', color text, engine_size text, location text not null default 'Abuja', description text,
  status text not null default 'Available', created_at timestamptz not null default now());
 grant select on public.cars to anon, authenticated; grant insert, update, delete on public.cars to authenticated; grant all on public.cars to service_role;
 alter table public.cars enable row level security;
@@ -56,15 +56,15 @@ end $$;
 create trigger on_auth_user_created_admin after insert on auth.users for each row execute function public.grant_first_admin();
 
 insert into public.cars (slug, make, model, year, price, mileage, transmission, fuel, body_type, condition, color, engine_size, location, description, created_at) values
-('2015-toyota-camry-xle','Toyota','Camry XLE',2015,9500000,98000,'Automatic','Petrol','Sedan','Foreign Used','Silver','2.5L','Ikeja, Lagos','Clean Tokunbo Camry XLE. Leather seats, reverse camera, keyless entry. Duty fully paid.', now() - interval '1 day'),
-('2012-toyota-corolla-le','Toyota','Corolla LE',2012,5200000,142000,'Automatic','Petrol','Sedan','Nigerian Used','Black','1.8L','Lekki, Lagos','Neatly used Corolla, buy and drive. AC chilling, no fault.', now() - interval '2 days'),
-('2016-toyota-highlander-limited','Toyota','Highlander Limited',2016,21500000,87000,'Automatic','Petrol','SUV','Foreign Used','White','3.5L V6','Ikeja, Lagos','Full option Highlander Limited. Panoramic roof, 3rd row seats, push start.', now() - interval '3 days'),
-('2018-toyota-hilux','Toyota','Hilux',2018,24000000,64000,'Manual','Diesel','Pickup','Foreign Used','Grey','2.8L','Apapa, Lagos','Strong diesel Hilux double cabin. Perfect for work and site.', now() - interval '4 days'),
-('2014-lexus-rx-350','Lexus','RX 350',2014,14800000,110000,'Automatic','Petrol','SUV','Foreign Used','Pearl White','3.5L V6','Lekki, Lagos','Tokunbo RX 350 with navigation, leather, sunroof. Very clean.', now() - interval '5 days'),
-('2013-lexus-es-350','Lexus','ES 350',2013,9800000,125000,'Automatic','Petrol','Sedan','Nigerian Used','Gold','3.5L V6','Surulere, Lagos','Smooth ES 350, first body. Engine and gear perfect.', now() - interval '6 days'),
-('2017-honda-accord-sport','Honda','Accord Sport',2017,13200000,76000,'Automatic','Petrol','Sedan','Foreign Used','Blue','2.4L','Ikeja, Lagos','Accord Sport with alloy wheels, Apple CarPlay, lane watch camera.', now() - interval '7 days'),
-('2015-honda-cr-v-ex','Honda','CR-V EX',2015,11500000,99000,'Automatic','Petrol','SUV','Nigerian Used','Red','2.4L','Ajah, Lagos','Reliable family SUV. Sunroof, reverse camera, low fuel use.', now() - interval '8 days'),
-('2016-mercedes-benz-c300','Mercedes-Benz','C300',2016,18900000,72000,'Automatic','Petrol','Sedan','Foreign Used','Black','2.0L Turbo','Victoria Island, Lagos','Tokunbo C300 4MATIC. Ambient lights, leather, Burmester sound.', now() - interval '9 days'),
-('2017-ford-explorer-xlt','Ford','Explorer XLT',2017,16500000,91000,'Automatic','Petrol','SUV','Foreign Used','Grey','3.5L V6','Ikeja, Lagos','7-seater Explorer XLT. Spacious, strong engine, ice-cold AC.', now() - interval '10 days');
+('2015-toyota-camry-xle','Toyota','Camry XLE',2015,9500000,98000,'Automatic','Petrol','Sedan','Foreign Used','Silver','2.5L','Ikeja, Abuja','Clean Tokunbo Camry XLE. Leather seats, reverse camera, keyless entry. Duty fully paid.', now() - interval '1 day'),
+('2012-toyota-corolla-le','Toyota','Corolla LE',2012,5200000,142000,'Automatic','Petrol','Sedan','Nigerian Used','Black','1.8L','Lekki, Abuja','Neatly used Corolla, buy and drive. AC chilling, no fault.', now() - interval '2 days'),
+('2016-toyota-highlander-limited','Toyota','Highlander Limited',2016,21500000,87000,'Automatic','Petrol','SUV','Foreign Used','White','3.5L V6','Ikeja, Abuja','Full option Highlander Limited. Panoramic roof, 3rd row seats, push start.', now() - interval '3 days'),
+('2018-toyota-hilux','Toyota','Hilux',2018,24000000,64000,'Manual','Diesel','Pickup','Foreign Used','Grey','2.8L','Apapa, Abuja','Strong diesel Hilux double cabin. Perfect for work and site.', now() - interval '4 days'),
+('2014-lexus-rx-350','Lexus','RX 350',2014,14800000,110000,'Automatic','Petrol','SUV','Foreign Used','Pearl White','3.5L V6','Lekki, Abuja','Tokunbo RX 350 with navigation, leather, sunroof. Very clean.', now() - interval '5 days'),
+('2013-lexus-es-350','Lexus','ES 350',2013,9800000,125000,'Automatic','Petrol','Sedan','Nigerian Used','Gold','3.5L V6','Surulere, Abuja','Smooth ES 350, first body. Engine and gear perfect.', now() - interval '6 days'),
+('2017-honda-accord-sport','Honda','Accord Sport',2017,13200000,76000,'Automatic','Petrol','Sedan','Foreign Used','Blue','2.4L','Ikeja, Abuja','Accord Sport with alloy wheels, Apple CarPlay, lane watch camera.', now() - interval '7 days'),
+('2015-honda-cr-v-ex','Honda','CR-V EX',2015,11500000,99000,'Automatic','Petrol','SUV','Nigerian Used','Red','2.4L','Ajah, Abuja','Reliable family SUV. Sunroof, reverse camera, low fuel use.', now() - interval '8 days'),
+('2016-mercedes-benz-c300','Mercedes-Benz','C300',2016,18900000,72000,'Automatic','Petrol','Sedan','Foreign Used','Black','2.0L Turbo','Victoria Island, Abuja','Tokunbo C300 4MATIC. Ambient lights, leather, Burmester sound.', now() - interval '9 days'),
+('2017-ford-explorer-xlt','Ford','Explorer XLT',2017,16500000,91000,'Automatic','Petrol','SUV','Foreign Used','Grey','3.5L V6','Ikeja, Abuja','7-seater Explorer XLT. Spacious, strong engine, ice-cold AC.', now() - interval '10 days');
 
 insert into public.car_images (car_id, url, position) select id, '/cars/' || slug || '.jpg', 0 from public.cars;

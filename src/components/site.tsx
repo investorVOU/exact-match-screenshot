@@ -109,11 +109,11 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
         <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{car.location}</p>
         {!sold && (
           <div className="mt-auto grid grid-cols-2 gap-1.5 pt-2">
-            <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-secondary text-xs font-semibold active:scale-95">
-              <Phone className="h-3.5 w-3.5" />Call
+            <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-secondary px-1 text-xs font-semibold active:scale-95">
+              <Phone className="h-3.5 w-3.5 shrink-0" />Call
             </a>
-            <a href={waLink(msg)} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp", name)} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-whatsapp text-xs font-semibold text-whatsapp-foreground active:scale-95">
-              <MessageCircle className="h-3.5 w-3.5 shrink-0" /><span className="truncate">WhatsApp</span>
+            <a href={waLink(msg)} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp", name)} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-whatsapp px-1 text-xs font-semibold text-whatsapp-foreground active:scale-95">
+              <MessageCircle className="h-3.5 w-3.5 shrink-0" /><span className="whitespace-nowrap">WhatsApp</span>
             </a>
           </div>
         )}
@@ -153,7 +153,7 @@ export function SiteFooter() {
         <p className="flex items-center gap-2 opacity-90"><MapPin className="h-4 w-4" />{BUSINESS.address}</p>
         <p className="opacity-90"><a href={telLink()} className="underline">{displayPhone()}</a></p>
         <p className="pt-2"><Link to="/request" className="font-semibold text-highlight underline">Can't find your car? Request it →</Link></p>
-        <p className="pt-2 text-xs opacity-60">© {new Date().getFullYear()} {BUSINESS.name}. Lagos, Nigeria.</p>
+        <p className="pt-2 text-xs opacity-60">© {new Date().getFullYear()} {BUSINESS.name}. Abuja, Nigeria.</p>
       </div>
     </footer>
   );

@@ -7,13 +7,13 @@ export const BUSINESS = {
   name: "Rush Autos",
 
   /** WhatsApp + phone number, international format WITHOUT "+" (e.g. 2348012345678) */
-  phone: "2348XXXXXXXXX",
+  phone: "2348149613583",
 
   /** Meta (Facebook/Instagram) Pixel ID. Leave as-is to disable tracking. */
   pixelId: "YOUR_PIXEL_ID",
 
   /** Showroom address shown in the footer */
-  address: "YOUR ADDRESS, LAGOS",
+  address: "Central Business District, Abuja",
 
   /** Your live website address (no trailing slash). Used for share previews and the sitemap. */
   siteUrl: "https://rushautos.com.ng",
