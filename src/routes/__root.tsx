@@ -13,7 +13,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { effectivePixelId, pixelIdValid, pixelScript } from "@/lib/pixel";
+import { effectivePixelId, pixelIdValid, pixelScript, track } from "@/lib/pixel";
 import { getSiteSettings } from "@/lib/settings.functions";
 import { BottomNav } from "@/components/site";
 import { Toaster } from "@/components/ui/sonner";
@@ -123,6 +123,10 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/auth");
+
+  useEffect(() => {
+    if (!isAdmin) track("PageView");
+  }, [isAdmin, pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>

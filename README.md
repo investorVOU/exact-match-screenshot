@@ -11,10 +11,12 @@ npm install
 npm run dev
 ```
 
-Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the environment. Add all five to Render when prompted; the service-role key is secret and must never use a `VITE_` prefix.
+Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `META_CONVERSIONS_API_ACCESS_TOKEN` in Render. The service-role key and Meta access token are secret and must never use a `VITE_` prefix.
 
 ## Deploy to Render
 
 This repository includes a Render Blueprint in `render.yaml`. In Render, create a new Blueprint and select this repository. Add the Supabase values when prompted, then deploy. The app runs as a Node web service using Nitro's `node-server` preset.
+
+Apply `supabase/migrations/20261005000000_meta_pixel_settings.sql` to the Supabase project before using **Admin → Settings**. Enter the numeric Pixel ID there. Create a Conversions API access token in Meta Events Manager and store it in Render as `META_CONVERSIONS_API_ACCESS_TOKEN`. To validate events in Meta, temporarily set `META_TEST_EVENT_CODE` in Render and remove it after testing.
 
 Update the business phone, address, site URL, and other public business details in `src/config/business.ts` before going live. Configure Supabase authentication, database policies, and storage for the production domain as well.

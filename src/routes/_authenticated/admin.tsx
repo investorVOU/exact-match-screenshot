@@ -37,6 +37,7 @@ function AdminLayout() {
           <nav className="flex items-center gap-1">
             <Link to="/admin" activeOptions={{ exact: true }} className={tab} activeProps={{ className: "bg-highlight text-highlight-foreground" }}>Cars</Link>
             <Link to="/admin/requests" className={tab} activeProps={{ className: "bg-highlight text-highlight-foreground" }}>Requests</Link>
+            <Link to="/admin/settings" className={tab} activeProps={{ className: "bg-highlight text-highlight-foreground" }}>Settings</Link>
             <button aria-label="Sign out" onClick={signOut} className="grid h-9 w-9 place-items-center rounded-full"><LogOut className="h-4 w-4" /></button>
           </nav>
         </div>

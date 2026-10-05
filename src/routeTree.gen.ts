@@ -15,9 +15,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as RequestRouteImport } from './routes/request'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiMetaEventsRouteImport } from './routes/api.meta-events'
 import { Route as CarsSlugRouteImport } from './routes/cars.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminCarsIdRouteImport } from './routes/_authenticated/admin.cars.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +51,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiMetaEventsRoute = ApiMetaEventsRouteImport.update({
+  id: '/api/meta-events',
+  path: '/api/meta-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CarsSlugRoute = CarsSlugRouteImport.update({
   id: '/cars/$slug',
   path: '/cars/$slug',
@@ -65,6 +72,12 @@ const AuthenticatedAdminRequestsRoute =
     path: '/requests',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminCarsIdRoute =
   AuthenticatedAdminCarsIdRouteImport.update({
     id: '/cars/$id',
@@ -78,8 +91,10 @@ export interface FileRoutesByFullPath {
   '/request': typeof RequestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/meta-events': typeof ApiMetaEventsRoute
   '/cars/$slug': typeof CarsSlugRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/cars/$id': typeof AuthenticatedAdminCarsIdRoute
 }
@@ -88,8 +103,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/request': typeof RequestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/meta-events': typeof ApiMetaEventsRoute
   '/cars/$slug': typeof CarsSlugRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/cars/$id': typeof AuthenticatedAdminCarsIdRoute
 }
@@ -101,8 +118,10 @@ export interface FileRoutesById {
   '/request': typeof RequestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/meta-events': typeof ApiMetaEventsRoute
   '/cars/$slug': typeof CarsSlugRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/cars/$id': typeof AuthenticatedAdminCarsIdRoute
 }
@@ -114,8 +133,10 @@ export interface FileRouteTypes {
     | '/request'
     | '/sitemap.xml'
     | '/admin'
+    | '/api/meta-events'
     | '/cars/$slug'
     | '/admin/requests'
+    | '/admin/settings'
     | '/admin/'
     | '/admin/cars/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -124,8 +145,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/request'
     | '/sitemap.xml'
+    | '/api/meta-events'
     | '/cars/$slug'
     | '/admin/requests'
+    | '/admin/settings'
     | '/admin'
     | '/admin/cars/$id'
   id:
@@ -136,8 +159,10 @@ export interface FileRouteTypes {
     | '/request'
     | '/sitemap.xml'
     | '/_authenticated/admin'
+    | '/api/meta-events'
     | '/cars/$slug'
     | '/_authenticated/admin/requests'
+    | '/_authenticated/admin/settings'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/cars/$id'
   fileRoutesById: FileRoutesById
@@ -148,6 +173,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   RequestRoute: typeof RequestRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiMetaEventsRoute: typeof ApiMetaEventsRoute
   CarsSlugRoute: typeof CarsSlugRoute
 }
 
@@ -195,6 +221,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/meta-events': {
+      id: '/api/meta-events'
+      path: '/api/meta-events'
+      fullPath: '/api/meta-events'
+      preLoaderRoute: typeof ApiMetaEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cars/$slug': {
       id: '/cars/$slug'
       path: '/cars/$slug'
@@ -216,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/cars/$id': {
       id: '/_authenticated/admin/cars/$id'
       path: '/cars/$id'
@@ -228,12 +268,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminCarsIdRoute: typeof AuthenticatedAdminCarsIdRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminCarsIdRoute: AuthenticatedAdminCarsIdRoute,
 }
@@ -258,6 +300,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   RequestRoute: RequestRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiMetaEventsRoute: ApiMetaEventsRoute,
   CarsSlugRoute: CarsSlugRoute,
 }
 export const routeTree = rootRouteImport
