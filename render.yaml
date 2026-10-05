@@ -2,7 +2,7 @@ services:
   - type: web
     name: rush-autos
     runtime: node
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: node .output/server/index.mjs
     envVars:
       - key: NODE_VERSION
