@@ -74,6 +74,10 @@ function Index() {
   }, [q]);
 
   useEffect(() => {
+    setQ(filters.q);
+  }, [filters.q]);
+
+  useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }
     listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [filters.page]);
@@ -114,7 +118,7 @@ function Index() {
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
           <label className="relative col-span-2 sm:col-span-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search make or model" aria-label="Search make or model" className={`${select} pl-9`} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search make, model or year" aria-label="Search make, model or year" className={`${select} pl-9`} />
           </label>
           <select aria-label="Brand" className={select} value={filters.brand} onChange={(e) => setFilter({ brand: e.target.value || undefined } as Partial<ListFilters>)}>
             <option value="">All brands</option>

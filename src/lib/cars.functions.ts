@@ -47,6 +47,9 @@ export const listFiltersSchema = z.object({
 });
 export type ListFilters = z.infer<typeof listFiltersSchema>;
 
+export const normalizeCarSearchTerms = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9-]+/g, " ").trim().split(/\s+/).filter(Boolean);
+
 export const listCars = createServerFn({ method: "GET" })
   .inputValidator((d) => listFiltersSchema.parse(d))
   .handler(async ({ data }) => {
@@ -58,8 +61,11 @@ export const listCars = createServerFn({ method: "GET" })
     if (data.brand) query = query.eq("make", data.brand);
     if (data.body) query = query.eq("body_type", data.body);
     if (data.max) query = query.lte("price", data.max);
-    const q = data.q.replace(/[^a-zA-Z0-9 \-]/g, "").trim();
-    if (q) query = query.or(`make.ilike.%${q}%,model.ilike.%${q}%`);
+    for (const term of normalizeCarSearchTerms(data.q)) {
+      const matches = [`make.ilike.%${term}%`, `model.ilike.%${term}%`];
+      if (/^\d{4}$/.test(term)) matches.push(`year.eq.${Number(term)}`);
+      query = query.or(matches.join(","));
+    }
     // Sold cars go to the bottom ("Available" sorts before "Sold")
     query = query.order("status", { ascending: true });
     if (data.sort === "price_asc") query = query.order("price", { ascending: true });
