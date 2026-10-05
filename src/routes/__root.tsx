@@ -13,7 +13,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { pixelEnabled, pixelScript } from "@/lib/pixel";
+import { effectivePixelId, pixelIdValid, pixelScript } from "@/lib/pixel";
+import { getSiteSettings } from "@/lib/settings.functions";
 import { BottomNav } from "@/components/site";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -66,29 +67,38 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#0e5a3a" },
-      { title: "Rush Autos — Used cars in Abuja" },
-      { name: "description", content: "Foreign used (Tokunbo) and Nigerian used cars in Abuja. Inspect before you pay." },
-      { property: "og:site_name", content: "Rush Autos" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap",
-      },
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-    ],
-    scripts: pixelEnabled() ? [{ children: pixelScript() }] : [],
-  }),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: ["site-settings"],
+      queryFn: () => getSiteSettings(),
+      staleTime: 60_000,
+    }),
+  head: ({ loaderData }) => {
+    const id = effectivePixelId(loaderData?.pixelId);
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+        { name: "theme-color", content: "#0e5a3a" },
+        { title: "Rush Autos — Used cars in Abuja" },
+        { name: "description", content: "Foreign used (Tokunbo) and Nigerian used cars in Abuja. Inspect before you pay." },
+        { property: "og:site_name", content: "Rush Autos" },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap",
+        },
+        { rel: "stylesheet", href: appCss },
+        { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      ],
+      scripts: pixelIdValid(id) ? [{ children: pixelScript(id) }] : [],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
