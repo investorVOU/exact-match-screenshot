@@ -174,6 +174,24 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          id: number
+          pixel_id: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          pixel_id?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          pixel_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
