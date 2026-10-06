@@ -1,0 +1,765 @@
+diff --git a/src/components/site.tsx b/src/components/site.tsx
+index d7d2c4f..f762948 100644
+--- a/src/components/site.tsx
++++ b/src/components/site.tsx
+@@ -1,7 +1,7 @@
+ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+ import { Car, Home, MessageCircle, Phone, ShieldCheck, BadgeCheck, FileCheck2, MapPin } from "lucide-react";
+ import { BUSINESS, displayPhone, formatNaira, telLink, waLink } from "@/config/business";
+-import { trackContact } from "@/lib/pixel";
++import { trackContact, trackWhatsAppLead } from "@/lib/pixel";
+ import type { CarCardDTO } from "@/lib/cars.functions";
+ 
+ export const carName = (c: { year: number; make: string; model: string }) => `${c.year} ${c.make} ${c.model}`;
+@@ -60,7 +60,7 @@ export function BottomNav() {
+         <button className={item} onClick={goHome}><Home className="h-5 w-5" />Home</button>
+         <button className={item} onClick={goList}><Car className="h-5 w-5" />Cars</button>
+         <a className={item} href={telLink()} onClick={() => trackContact("call")}><Phone className="h-5 w-5" />Call</a>
+-        <a className={`${item} bg-whatsapp text-whatsapp-foreground`} href={waLink()} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp")}>
++        <a className={`${item} bg-whatsapp text-whatsapp-foreground`} href={waLink()} target="_blank" rel="noopener" onClick={() => trackWhatsAppLead()}>
+           <MessageCircle className="h-5 w-5" />Chat
+         </a>
+       </div>
+@@ -118,7 +118,7 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
+             <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-secondary px-1 text-xs font-semibold active:scale-95">
+               <Phone className="h-3.5 w-3.5 shrink-0" />Call
+             </a>
+-            <a href={waLink(msg)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp about ${name}`} title={`WhatsApp about ${name}`} onClick={() => trackContact("whatsapp", name)} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-whatsapp px-1 text-xs font-semibold text-whatsapp-foreground active:scale-95">
++            <a href={waLink(msg)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp about ${name}`} title={`WhatsApp about ${name}`} onClick={() => trackWhatsAppLead({ name, id: car.id })} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-whatsapp px-1 text-xs font-semibold text-whatsapp-foreground active:scale-95">
+               <MessageCircle className="h-3.5 w-3.5 shrink-0" /><span className="hidden whitespace-nowrap sm:inline">WhatsApp</span>
+             </a>
+           </div>
+diff --git a/src/lib/meta-capi.server.ts b/src/lib/meta-capi.server.ts
+new file mode 100644
+index 0000000..267f1e6
+--- /dev/null
++++ b/src/lib/meta-capi.server.ts
+@@ -0,0 +1,161 @@
++import { createHash } from "node:crypto";
++import { BUSINESS } from "@/config/business";
++import { publicDb } from "@/lib/cars.server";
++
++/**
++ * Server-only Meta Conversions API sender. Shared by /api/meta-events (browser-originated
++ * events, deduplicated against the Pixel via the same eventId) and by confirmed-sale
++ * Purchase events (server-originated only).
++ *
++ * "Purchase" is deliberately NOT part of the browser-facing MetaEventName in pixel.ts and is
++ * NOT accepted by /api/meta-events, so it can never be fired from a visitor's browser.
++ */
++export type ServerMetaEventName =
++  "PageView" | "ViewContent" | "Lead" | "Schedule" | "Contact" | "Purchase";
++
++export type CapiCustomData = Record<string, string | string[] | number>;
++export type CapiUserData = Record<string, string | string[]>;
++export type SendMetaEventResult = "sent" | "skipped" | "failed";
++
++/** Whitelist + clamp the custom_data accepted from the browser. */
++export function makeCustomData(input: Record<string, unknown> | undefined) {
++  if (!input) return undefined;
++  const result: CapiCustomData = {};
++  for (const key of ["content_name", "content_type", "currency", "method"] as const) {
++    const value = input[key];
++    if (typeof value === "string") result[key] = value.slice(0, 200);
++  }
++  if (Array.isArray(input["content_ids"])) {
++    result["content_ids"] = input["content_ids"]
++      .filter((value): value is string => typeof value === "string")
++      .slice(0, 10)
++      .map((value) => value.slice(0, 200));
++  }
++  const value = input["value"];
++  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
++    result["value"] = value;
++  }
++  return Object.keys(result).length ? result : undefined;
++}
++
++export type SendMetaEventInput = {
++  eventName: ServerMetaEventName;
++  eventId: string;
++  eventSourceUrl: string;
++  userData: CapiUserData;
++  customData?: CapiCustomData | undefined;
++  actionSource?: "website" | "physical_store";
++};
++
++export async function sendMetaEvent(input: SendMetaEventInput): Promise<SendMetaEventResult> {
++  const accessToken = process.env["META_CONVERSIONS_API_ACCESS_TOKEN"];
++  if (!accessToken) return "skipped";
++
++  let pixelId: string = BUSINESS.pixelId;
++  try {
++    const { data } = await publicDb()
++      .from("site_settings")
++      .select("pixel_id")
++      .eq("id", 1)
++      .maybeSingle();
++    if (data?.pixel_id) pixelId = data.pixel_id;
++  } catch {
++    // Keep CAPI optional until its settings table is deployed.
++  }
++  if (!/^\d{6,}$/.test(pixelId)) return "skipped";
++
++  const version = process.env["META_GRAPH_API_VERSION"] ?? "v23.0";
++  const endpoint = new URL(`https://graph.facebook.com/${version}/${pixelId}/events`);
++  endpoint.searchParams.set("access_token", accessToken);
++  const testEventCode = process.env["META_TEST_EVENT_CODE"];
++  const payload = {
++    data: [
++      {
++        event_name: input.eventName,
++        event_time: Math.floor(Date.now() / 1000),
++        event_id: input.eventId,
++        action_source: input.actionSource ?? "website",
++        event_source_url: input.eventSourceUrl,
++        user_data: input.userData,
++        ...(input.customData ? { custom_data: input.customData } : {}),
++      },
++    ],
++    ...(testEventCode ? { test_event_code: testEventCode } : {}),
++  };
++
++  try {
++    const response = await fetch(endpoint, {
++      method: "POST",
++      headers: { "content-type": "application/json" },
++      body: JSON.stringify(payload),
++    });
++    if (!response.ok) {
++      console.error(`[Meta CAPI] Event rejected with status ${response.status}`);
++      return "failed";
++    }
++    return "sent";
++  } catch {
++    console.error("[Meta CAPI] Event delivery failed");
++    return "failed";
++  }
++}
++
++/* ------------------------------ Purchase (confirmed sale) ------------------------------ */
++
++/**
++ * A confirmed sale is recorded by staff in the admin area, not in the customer's browser, so
++ * there is no customer user-agent/IP/fbp to send. Meta requires client_user_agent for
++ * action_source "website", so claiming "website" here would mean sending the admin's browser
++ * data as if it were the buyer's. "physical_store" is the honest value for a sale closed
++ * off-site (showroom / WhatsApp / phone). Change it only if you start storing the buyer's
++ * original browser data with the lead.
++ */
++export const PURCHASE_ACTION_SOURCE = "physical_store" as const;
++
++/** One car = one sale. Same ID on every retry/re-toggle lets Meta drop repeats. */
++export const purchaseEventId = (carId: string) => `purchase_${carId}`;
++
++/** Digits only, Nigerian local format (080…) -> international (23480…). Null if implausible. */
++export function normalizePhone(raw: string): string | null {
++  let digits = raw.replace(/\D/g, "");
++  if (digits.startsWith("00")) digits = digits.slice(2);
++  else if (digits.startsWith("0")) digits = `234${digits.slice(1)}`;
++  return digits.length >= 10 && digits.length <= 15 ? digits : null;
++}
++
++export const hashForMeta = (value: string) =>
++  createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
++
++export type PurchaseInput = {
++  carId: string;
++  carSlug: string;
++  vehicleName: string;
++  salePrice: number;
++  buyerPhone?: string | undefined;
++};
++
++/**
++ * Sends a Purchase to the Conversions API. Without a buyer identifier Meta cannot match the
++ * sale to anyone, so nothing is sent and "no_match_data" is returned.
++ */
++export async function sendPurchaseEvent(
++  input: PurchaseInput,
++): Promise<SendMetaEventResult | "no_match_data"> {
++  const phone = input.buyerPhone ? normalizePhone(input.buyerPhone) : null;
++  if (!phone) return "no_match_data";
++
++  return sendMetaEvent({
++    eventName: "Purchase",
++    eventId: purchaseEventId(input.carId),
++    eventSourceUrl: `${BUSINESS.siteUrl}/cars/${encodeURIComponent(input.carSlug)}`,
++    actionSource: PURCHASE_ACTION_SOURCE,
++    userData: { ph: [hashForMeta(phone)] },
++    customData: {
++      currency: "NGN",
++      value: input.salePrice,
++      content_name: input.vehicleName,
++      content_type: "vehicle",
++      content_ids: [input.carId],
++    },
++  });
++}
+diff --git a/src/lib/pixel.ts b/src/lib/pixel.ts
+index 6672276..a6bfae9 100644
+--- a/src/lib/pixel.ts
++++ b/src/lib/pixel.ts
+@@ -43,9 +43,24 @@ export function track(event: MetaEventName, params: Record<string, unknown> = {}
+   }
+ }
+ 
+-export const trackContact = (method: "call" | "whatsapp", carName?: string) =>
++/** Phone calls only. WhatsApp enquiries are Leads: use trackWhatsAppLead (never both). */
++export const trackContact = (method: "call", carName?: string) =>
+   track("Contact", { method, ...(carName ? { content_name: carName } : {}) });
+ 
++/** A WhatsApp enquiry is a Lead. Pass the vehicle when the button belongs to one. */
++export const trackWhatsAppLead = (car?: { name: string; id?: string }) =>
++  track(
++    "Lead",
++    car
++      ? {
++          content_name: car.name,
++          content_type: "vehicle",
++          ...(car.id ? { content_ids: [car.id] } : {}),
++          method: "whatsapp",
++        }
++      : { method: "whatsapp" },
++  );
++
+ /** Inline base code injected in <head> for the given Pixel ID. */
+ export const pixelScript = (pixelId: string) =>
+   `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');try{fbq('init','${pixelId}');}catch(e){}`;
+diff --git a/src/lib/purchase.functions.ts b/src/lib/purchase.functions.ts
+new file mode 100644
+index 0000000..d4816e0
+--- /dev/null
++++ b/src/lib/purchase.functions.ts
+@@ -0,0 +1,46 @@
++import { createServerFn } from "@tanstack/react-start";
++import { z } from "zod";
++import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
++import { sendPurchaseEvent } from "./meta-capi.server";
++
++/**
++ * Sends the Meta Purchase (Conversions API, server-side only) for a vehicle the admin has
++ * just marked Sold. Admin-only, and refuses unless the car is really "Sold" in the database,
++ * so it cannot be used to report a sale that was not recorded.
++ */
++export const recordVehicleSale = createServerFn({ method: "POST" })
++  .middleware([requireSupabaseAuth])
++  .inputValidator((d) =>
++    z
++      .object({
++        carId: z.string().uuid(),
++        salePrice: z.number().finite().positive().max(1e12),
++        buyerPhone: z.string().max(30).optional(),
++      })
++      .parse(d),
++  )
++  .handler(async ({ data, context }) => {
++    const { supabase, userId } = context;
++    const { data: isAdmin, error: roleError } = await supabase.rpc("has_role", {
++      _user_id: userId,
++      _role: "admin",
++    });
++    if (roleError || !isAdmin) throw new Error("Forbidden");
++
++    const { data: car, error } = await supabase
++      .from("cars")
++      .select("id,slug,make,model,year,status")
++      .eq("id", data.carId)
++      .maybeSingle();
++    if (error || !car) throw new Error("Car not found");
++    if (car.status !== "Sold") throw new Error("Car is not marked as Sold");
++
++    const result = await sendPurchaseEvent({
++      carId: car.id,
++      carSlug: car.slug,
++      vehicleName: `${car.year} ${car.make} ${car.model}`,
++      salePrice: data.salePrice,
++      buyerPhone: data.buyerPhone,
++    });
++    return { result };
++  });
+diff --git a/src/lib/record-sale.ts b/src/lib/record-sale.ts
+new file mode 100644
+index 0000000..4565751
+--- /dev/null
++++ b/src/lib/record-sale.ts
+@@ -0,0 +1,45 @@
++import { toast } from "sonner";
++import { recordVehicleSale } from "@/lib/purchase.functions";
++
++export type SaleDetails = { salePrice: number; buyerPhone: string };
++
++/** Asks the admin for the real sale price and buyer phone. Returns null if cancelled/invalid. */
++export function askSaleDetails(vehicleName: string, listPrice: number): SaleDetails | null {
++  const priceInput = window.prompt(
++    `Final sale price for ${vehicleName} (₦). Sent to Meta as the Purchase value.`,
++    String(Math.round(listPrice)),
++  );
++  if (priceInput === null) return null;
++  const salePrice = Number(priceInput.replace(/[,\s₦]/g, ""));
++  if (!Number.isFinite(salePrice) || salePrice <= 0) {
++    toast.error("Enter a valid sale price.");
++    return null;
++  }
++  const phoneInput = window.prompt(
++    "Buyer's phone / WhatsApp number. Meta needs it to match the sale to the ad. Leave blank to skip the Meta Purchase.",
++    "",
++  );
++  if (phoneInput === null) return null;
++  return { salePrice, buyerPhone: phoneInput.trim() };
++}
++
++/** Call only AFTER the car has been saved as Sold. */
++export async function reportVehicleSale(carId: string, sale: SaleDetails) {
++  try {
++    const { result } = await recordVehicleSale({
++      data: {
++        carId,
++        salePrice: sale.salePrice,
++        ...(sale.buyerPhone ? { buyerPhone: sale.buyerPhone } : {}),
++      },
++    });
++    if (result === "sent") toast.success("Marked sold. Purchase sent to Meta.");
++    else if (result === "no_match_data")
++      toast.info("Marked sold. No Meta Purchase sent: a valid buyer phone is required.");
++    else if (result === "skipped")
++      toast.info("Marked sold. Meta Purchase skipped (CAPI not configured).");
++    else toast.error("Marked sold, but the Meta Purchase failed to send.");
++  } catch {
++    toast.error("Marked sold, but the Meta Purchase could not be recorded.");
++  }
++}
+diff --git a/src/routes/_authenticated/admin.cars.$id.tsx b/src/routes/_authenticated/admin.cars.$id.tsx
+index 4e08ab6..e3f2de3 100644
+--- a/src/routes/_authenticated/admin.cars.$id.tsx
++++ b/src/routes/_authenticated/admin.cars.$id.tsx
+@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
+ import { ArrowDown, ArrowUp, ChevronLeft, ImagePlus, Star, X } from "lucide-react";
+ import { toast } from "sonner";
+ import { supabase } from "@/integrations/supabase/client";
++import { askSaleDetails, reportVehicleSale } from "@/lib/record-sale";
+ 
+ export const Route = createFileRoute("/_authenticated/admin/cars/$id")({ component: CarForm });
+ 
+@@ -38,6 +39,7 @@ function CarForm() {
+   const [busy, setBusy] = useState(false);
+   const [loading, setLoading] = useState(!isNew);
+   const dragFrom = useRef<number | null>(null);
++  const savedStatus = useRef<string | null>(null);
+ 
+   useEffect(() => {
+     if (isNew) return;
+@@ -45,6 +47,7 @@ function CarForm() {
+       const { data, error } = await supabase.from("cars").select("*, car_images(id,url,path,position)").eq("id", id).maybeSingle();
+       if (error || !data) { toast.error("Car not found"); return navigate({ to: "/admin" }); }
+       const { car_images, ...car } = data;
++      savedStatus.current = car.status;
+       setF({ ...empty, ...car, price: Number(car.price), color: car.color ?? "", engine_size: car.engine_size ?? "", description: car.description ?? "" });
+       setPhotos([...(car_images ?? [])].sort((a, b) => a.position - b.position).map((i) => ({ key: i.id, url: i.url, path: i.path })));
+       setLoading(false);
+@@ -77,6 +80,10 @@ function CarForm() {
+   const save = async (e: React.FormEvent): Promise<void> => {
+     e.preventDefault();
+     if (!photos.length) { toast.error("Add at least one photo."); return; }
++    // Only an existing car going from not-Sold to Sold is a sale (adding already-sold stock is not).
++    const markingSold = !isNew && savedStatus.current !== "Sold" && f.status === "Sold";
++    const sale = markingSold ? askSaleDetails(`${f.year} ${f.make} ${f.model}`, f.price) : null;
++    if (markingSold && !sale) return;
+     setBusy(true);
+     try {
+       const payload = { ...f, color: f.color || null, engine_size: f.engine_size || null, description: f.description || null };
+@@ -91,6 +98,10 @@ function CarForm() {
+       } else {
+         const { error } = await supabase.from("cars").update(payload).eq("id", id);
+         if (error) throw error;
++        if (sale) {
++          savedStatus.current = "Sold";
++          await reportVehicleSale(id, sale);
++        }
+       }
+ 
+       const final: { url: string; path: string | null }[] = [];
+diff --git a/src/routes/_authenticated/admin.index.tsx b/src/routes/_authenticated/admin.index.tsx
+index 9e3ecff..8dc6c42 100644
+--- a/src/routes/_authenticated/admin.index.tsx
++++ b/src/routes/_authenticated/admin.index.tsx
+@@ -5,6 +5,7 @@ import { Plus, Search } from "lucide-react";
+ import { toast } from "sonner";
+ import { supabase } from "@/integrations/supabase/client";
+ import { formatNaira } from "@/config/business";
++import { askSaleDetails, reportVehicleSale } from "@/lib/record-sale";
+ 
+ export const Route = createFileRoute("/_authenticated/admin/")({ component: AdminCars });
+ 
+@@ -21,9 +22,14 @@ function AdminCars() {
+   });
+   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-cars"] }); qc.invalidateQueries({ queryKey: ["cars"] }); };
+ 
+-  const toggleSold = async (id: string, status: string) => {
+-    const { error } = await supabase.from("cars").update({ status: status === "Sold" ? "Available" : "Sold" }).eq("id", id);
+-    if (error) toast.error(error.message); else refresh();
++  const toggleSold = async (c: (typeof cars)[number]) => {
++    const markingSold = c.status !== "Sold";
++    const sale = markingSold ? askSaleDetails(`${c.year} ${c.make} ${c.model}`, Number(c.price)) : null;
++    if (markingSold && !sale) return;
++    const { error } = await supabase.from("cars").update({ status: markingSold ? "Sold" : "Available" }).eq("id", c.id);
++    if (error) { toast.error(error.message); return; }
++    refresh();
++    if (sale) await reportVehicleSale(c.id, sale);
+   };
+   const remove = async (id: string, name: string) => {
+     if (!confirm(`Delete ${name}? This can't be undone.`)) return;
+@@ -63,7 +69,7 @@ function AdminCars() {
+                 <p className="font-price text-sm font-bold text-primary">{formatNaira(Number(c.price))}</p>
+                 <div className="mt-1.5 flex flex-wrap gap-1.5">
+                   <Link to="/admin/cars/$id" params={{ id: c.id }} className={`${btn} inline-flex items-center bg-secondary`}>Edit</Link>
+-                  <button onClick={() => toggleSold(c.id, c.status)} className={`${btn} ${c.status === "Sold" ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}`}>
++                  <button onClick={() => toggleSold(c)} className={`${btn} ${c.status === "Sold" ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}`}>
+                     {c.status === "Sold" ? "Mark available" : "Mark as Sold"}
+                   </button>
+                   <button onClick={() => remove(c.id, name)} className={`${btn} bg-destructive text-destructive-foreground`}>Delete</button>
+diff --git a/src/routes/api.meta-events.ts b/src/routes/api.meta-events.ts
+index 6e20715..ead88e7 100644
+--- a/src/routes/api.meta-events.ts
++++ b/src/routes/api.meta-events.ts
+@@ -1,7 +1,7 @@
+ import { createFileRoute } from "@tanstack/react-router";
+ import { z } from "zod";
+ import { BUSINESS } from "@/config/business";
+-import { publicDb } from "@/lib/cars.server";
++import { makeCustomData, sendMetaEvent } from "@/lib/meta-capi.server";
+ 
+ const eventSchema = z.object({
+   eventName: z.enum(["PageView", "ViewContent", "Lead", "Schedule", "Contact"]),
+@@ -42,25 +42,6 @@ function cookieValue(request: Request, name: string): string | undefined {
+   return value && value.length <= 512 ? value : undefined;
+ }
+ 
+-function makeCustomData(input: Record<string, unknown> | undefined) {
+-  if (!input) return undefined;
+-  const result: Record<string, string | string[] | number> = {};
+-  for (const key of ["content_name", "content_type", "currency", "method"] as const) {
+-    const value = input[key];
+-    if (typeof value === "string") result[key] = value.slice(0, 200);
+-  }
+-  if (Array.isArray(input.content_ids)) {
+-    result.content_ids = input.content_ids
+-      .filter((value): value is string => typeof value === "string")
+-      .slice(0, 10)
+-      .map((value) => value.slice(0, 200));
+-  }
+-  if (typeof input.value === "number" && Number.isFinite(input.value) && input.value >= 0) {
+-    result.value = input.value;
+-  }
+-  return Object.keys(result).length ? result : undefined;
+-}
+-
+ export const Route = createFileRoute("/api/meta-events")({
+   server: {
+     handlers: {
+@@ -75,65 +56,27 @@ export const Route = createFileRoute("/api/meta-events")({
+         const sourceUrl = new URL(parsed.eventSourceUrl);
+         if (!isSameSiteEvent(request, sourceUrl)) return new Response(null, { status: 403 });
+ 
+-        const accessToken = process.env["META_CONVERSIONS_API_ACCESS_TOKEN"];
+-        if (!accessToken) return new Response(null, { status: 204 });
+-
+-        let pixelId = BUSINESS.pixelId;
+-        try {
+-          const { data } = await publicDb()
+-            .from("site_settings")
+-            .select("pixel_id")
+-            .eq("id", 1)
+-            .maybeSingle();
+-          if (data?.pixel_id) pixelId = data.pixel_id;
+-        } catch {
+-          // Keep CAPI optional until its settings table is deployed.
+-        }
+-        if (!/^\d{6,}$/.test(pixelId)) return new Response(null, { status: 204 });
+-
+         const ip =
+           request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+           request.headers.get("x-real-ip") ??
+           undefined;
+         const userAgent = request.headers.get("user-agent")?.slice(0, 500);
++        const fbp = cookieValue(request, "_fbp");
++        const fbc = cookieValue(request, "_fbc");
+         const userData = {
+           ...(ip ? { client_ip_address: ip } : {}),
+           ...(userAgent ? { client_user_agent: userAgent } : {}),
+-          ...(cookieValue(request, "_fbp") ? { fbp: cookieValue(request, "_fbp") } : {}),
+-          ...(cookieValue(request, "_fbc") ? { fbc: cookieValue(request, "_fbc") } : {}),
+-        };
+-        const version = process.env["META_GRAPH_API_VERSION"] ?? "v23.0";
+-        const endpoint = new URL(`https://graph.facebook.com/${version}/${pixelId}/events`);
+-        endpoint.searchParams.set("access_token", accessToken);
+-        const testEventCode = process.env["META_TEST_EVENT_CODE"];
+-        const payload = {
+-          data: [
+-            {
+-              event_name: parsed.eventName,
+-              event_time: Math.floor(Date.now() / 1000),
+-              event_id: parsed.eventId,
+-              action_source: "website",
+-              event_source_url: sourceUrl.href,
+-              user_data: userData,
+-              ...(makeCustomData(parsed.customData)
+-                ? { custom_data: makeCustomData(parsed.customData) }
+-                : {}),
+-            },
+-          ],
+-          ...(testEventCode ? { test_event_code: testEventCode } : {}),
++          ...(fbp ? { fbp } : {}),
++          ...(fbc ? { fbc } : {}),
+         };
+ 
+-        try {
+-          const response = await fetch(endpoint, {
+-            method: "POST",
+-            headers: { "content-type": "application/json" },
+-            body: JSON.stringify(payload),
+-          });
+-          if (!response.ok)
+-            console.error(`[Meta CAPI] Event rejected with status ${response.status}`);
+-        } catch {
+-          console.error("[Meta CAPI] Event delivery failed");
+-        }
++        await sendMetaEvent({
++          eventName: parsed.eventName,
++          eventId: parsed.eventId,
++          eventSourceUrl: sourceUrl.href,
++          userData,
++          customData: makeCustomData(parsed.customData),
++        });
+         return new Response(null, { status: 204 });
+       },
+     },
+diff --git a/src/routes/cars.$slug.tsx b/src/routes/cars.$slug.tsx
+index 8bb51f2..67c9422 100644
+--- a/src/routes/cars.$slug.tsx
++++ b/src/routes/cars.$slug.tsx
+@@ -7,7 +7,7 @@ import { getCar } from "@/lib/cars.functions";
+ import { CarCard, ConditionBadge, SiteFooter, SiteHeader, absUrl, carName } from "@/components/site";
+ import { Gallery } from "@/components/gallery";
+ import { formatNaira, telLink, waLink } from "@/config/business";
+-import { track, trackContact } from "@/lib/pixel";
++import { track, trackContact, trackWhatsAppLead } from "@/lib/pixel";
+ import { supabase } from "@/integrations/supabase/client";
+ 
+ const carQuery = (slug: string) =>
+@@ -109,7 +109,7 @@ function CarPage() {
+                 <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground active:scale-95">
+                   <Phone className="h-4 w-4" />Call now
+                 </a>
+-                <a href={waLink(`Hello, I'm interested in the ${name} (${price}). Is it available?`)} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp", name)}
++                <a href={waLink(`Hello, I'm interested in the ${name} (${price}). Is it available?`)} target="_blank" rel="noopener" onClick={() => trackWhatsAppLead({ name, id: car.id })}
+                   className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp font-semibold text-whatsapp-foreground active:scale-95">
+                   <MessageCircle className="h-4 w-4" />WhatsApp
+                 </a>
+diff --git a/src/routes/contact.tsx b/src/routes/contact.tsx
+index 39beb0b..da53c11 100644
+--- a/src/routes/contact.tsx
++++ b/src/routes/contact.tsx
+@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
+ import { Globe, MapPin, MessageCircle, Phone } from "lucide-react";
+ import { SiteFooter, SiteHeader } from "@/components/site";
+ import { BUSINESS, displayPhone, telLink, waLink } from "@/config/business";
+-import { trackContact } from "@/lib/pixel";
++import { trackContact, trackWhatsAppLead } from "@/lib/pixel";
+ 
+ export const Route = createFileRoute("/contact")({
+   head: () => ({
+@@ -44,7 +44,7 @@ function ContactPage() {
+             href={waLink("Hello Rush Autos, I'd like to make an enquiry.")}
+             target="_blank"
+             rel="noopener noreferrer"
+-            onClick={() => trackContact("whatsapp")}
++            onClick={() => trackWhatsAppLead()}
+             className="flex items-center gap-4 py-5"
+           >
+             <MessageCircle className="h-5 w-5 shrink-0 text-primary" />
+diff --git a/src/routes/index.tsx b/src/routes/index.tsx
+index a1045e2..6930263 100644
+--- a/src/routes/index.tsx
++++ b/src/routes/index.tsx
+@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
+ import { listBrands, listCars, listFiltersSchema, type ListFilters } from "@/lib/cars.functions";
+ import { CarCard, SiteFooter, SiteHeader, TrustSection } from "@/components/site";
+ import { BUSINESS, waLink } from "@/config/business";
+-import { trackContact } from "@/lib/pixel";
++import { trackWhatsAppLead } from "@/lib/pixel";
+ 
+ const carsQuery = (f: ListFilters) =>
+   queryOptions({ queryKey: ["cars", f], queryFn: () => listCars({ data: f }), staleTime: 60_000 });
+@@ -146,7 +146,7 @@ function Index() {
+         {data && data.cars.length === 0 ? (
+           <div className="mt-4 rounded-2xl bg-card p-6 text-center shadow-card">
+             <p className="font-semibold">No cars match. Clear a filter, or WhatsApp us and we'll source it for you.</p>
+-            <a href={waLink("Hello Rush Autos, please help me source a car.")} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp")}
++            <a href={waLink("Hello Rush Autos, please help me source a car.")} target="_blank" rel="noopener" onClick={() => trackWhatsAppLead()}
+               className="mt-4 inline-flex h-11 items-center gap-2 rounded-full bg-whatsapp px-5 text-sm font-semibold text-whatsapp-foreground">
+               <MessageCircle className="h-4 w-4" />WhatsApp us
+             </a>
+diff --git a/src/test/meta-capi.test.ts b/src/test/meta-capi.test.ts
+new file mode 100644
+index 0000000..a30030d
+--- /dev/null
++++ b/src/test/meta-capi.test.ts
+@@ -0,0 +1,98 @@
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++
++vi.mock("@/lib/cars.server", () => ({
++  publicDb: () => ({
++    from: () => ({
++      select: () => ({
++        eq: () => ({ maybeSingle: async () => ({ data: { pixel_id: "123456789012345" } }) }),
++      }),
++    }),
++  }),
++}));
++
++import {
++  hashForMeta,
++  normalizePhone,
++  purchaseEventId,
++  sendMetaEvent,
++  sendPurchaseEvent,
++} from "@/lib/meta-capi.server";
++
++const sale = {
++  carId: "11111111-2222-3333-4444-555555555555",
++  carSlug: "2015-toyota-camry",
++  vehicleName: "2015 Toyota Camry",
++  salePrice: 9_500_000,
++  buyerPhone: "0803 123 4567",
++};
++
++describe("Meta CAPI server sender", () => {
++  const fetchMock = vi.fn();
++  beforeEach(() => {
++    process.env["META_CONVERSIONS_API_ACCESS_TOKEN"] = "token";
++    fetchMock.mockReset().mockResolvedValue(new Response("{}", { status: 200 }));
++    vi.stubGlobal("fetch", fetchMock);
++  });
++  afterEach(() => {
++    delete process.env["META_CONVERSIONS_API_ACCESS_TOKEN"];
++    vi.unstubAllGlobals();
++  });
++
++  it("normalizes Nigerian numbers and hashes them", () => {
++    expect(normalizePhone("0803 123 4567")).toBe("2348031234567");
++    expect(normalizePhone("+234 803 123 4567")).toBe("2348031234567");
++    expect(normalizePhone("123")).toBeNull();
++    expect(hashForMeta("2348031234567")).toMatch(/^[a-f0-9]{64}$/);
++  });
++
++  it("sends a Purchase with the required custom_data and a deterministic event_id", async () => {
++    expect(await sendPurchaseEvent(sale)).toBe("sent");
++    const payload = JSON.parse((fetchMock.mock.calls[0]?.[1] as RequestInit).body as string);
++    const event = payload.data[0];
++    expect(event).toMatchObject({
++      event_name: "Purchase",
++      event_id: purchaseEventId(sale.carId),
++      action_source: "physical_store",
++      event_source_url: "https://rushautos.com.ng/cars/2015-toyota-camry",
++      custom_data: {
++        currency: "NGN",
++        value: 9_500_000,
++        content_name: "2015 Toyota Camry",
++        content_type: "vehicle",
++        content_ids: [sale.carId],
++      },
++    });
++    expect(event.event_time).toEqual(expect.any(Number));
++    expect(event.user_data).toEqual({ ph: [hashForMeta("2348031234567")] });
++    expect(JSON.stringify(payload)).not.toContain("0803");
++  });
++
++  it("does not send a Purchase it cannot match to anyone", async () => {
++    expect(await sendPurchaseEvent({ ...sale, buyerPhone: "" })).toBe("no_match_data");
++    expect(fetchMock).not.toHaveBeenCalled();
++  });
++
++  it("keeps the browser event payload shape (website, event_id, user_data)", async () => {
++    await sendMetaEvent({
++      eventName: "Lead",
++      eventId: "abc-123",
++      eventSourceUrl: "https://rushautos.com.ng/",
++      userData: { client_user_agent: "UA" },
++      customData: { method: "whatsapp" },
++    });
++    const event = JSON.parse((fetchMock.mock.calls[0]?.[1] as RequestInit).body as string).data[0];
++    expect(event).toMatchObject({
++      event_name: "Lead",
++      event_id: "abc-123",
++      action_source: "website",
++      user_data: { client_user_agent: "UA" },
++      custom_data: { method: "whatsapp" },
++    });
++  });
++
++  it("is skipped when no access token is configured", async () => {
++    delete process.env["META_CONVERSIONS_API_ACCESS_TOKEN"];
++    expect(await sendPurchaseEvent(sale)).toBe("skipped");
++    expect(fetchMock).not.toHaveBeenCalled();
++  });
++});
+diff --git a/src/test/whatsapp-lead.test.ts b/src/test/whatsapp-lead.test.ts
+new file mode 100644
+index 0000000..a4166f5
+--- /dev/null
++++ b/src/test/whatsapp-lead.test.ts
+@@ -0,0 +1,53 @@
++import { afterEach, describe, expect, it, vi } from "vitest";
++import { trackContact, trackWhatsAppLead } from "@/lib/pixel";
++
++function setup() {
++  const fbq = vi.fn();
++  Object.defineProperty(window, "fbq", { configurable: true, value: fbq });
++  Object.defineProperty(navigator, "sendBeacon", { configurable: true, value: () => false });
++  const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
++  vi.stubGlobal("fetch", fetchMock);
++  return { fbq, fetchMock };
++}
++
++describe("WhatsApp enquiries are Leads", () => {
++  afterEach(() => {
++    vi.unstubAllGlobals();
++    vi.restoreAllMocks();
++  });
++
++  it("fires exactly one Lead (no Contact) for a vehicle WhatsApp click, with matching IDs", () => {
++    const { fbq, fetchMock } = setup();
++    trackWhatsAppLead({ name: "2015 Toyota Camry", id: "car-1" });
++
++    expect(fbq).toHaveBeenCalledTimes(1);
++    expect(fetchMock).toHaveBeenCalledTimes(1);
++    const params = {
++      content_name: "2015 Toyota Camry",
++      content_type: "vehicle",
++      content_ids: ["car-1"],
++      method: "whatsapp",
++    };
++    expect(fbq).toHaveBeenCalledWith("track", "Lead", params, { eventID: expect.any(String) });
++    const body = JSON.parse((fetchMock.mock.calls[0]?.[1] as RequestInit).body as string);
++    expect(body).toMatchObject({ eventName: "Lead", customData: params });
++    expect(body.eventId).toBe((fbq.mock.calls[0]?.[3] as { eventID: string }).eventID);
++  });
++
++  it("tracks a general WhatsApp enquiry as Lead with only the method", () => {
++    const { fbq } = setup();
++    trackWhatsAppLead();
++    expect(fbq).toHaveBeenCalledWith("track", "Lead", { method: "whatsapp" }, expect.anything());
++  });
++
++  it("keeps phone calls as Contact", () => {
++    const { fbq } = setup();
++    trackContact("call", "2015 Toyota Camry");
++    expect(fbq).toHaveBeenCalledWith(
++      "track",
++      "Contact",
++      { method: "call", content_name: "2015 Toyota Camry" },
++      expect.anything(),
++    );
++  });
++});
