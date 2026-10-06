@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteHeader } from "@/components/site";
+import { BUSINESS, displayPhone, telLink } from "@/config/business";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
