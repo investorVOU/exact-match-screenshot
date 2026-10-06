@@ -6,7 +6,11 @@ export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
       { title: "Privacy Policy — Rush Autos" },
-      { name: "description", content: "How Rush Autos collects, uses, and protects information when you use our website." },
+      {
+        name: "description",
+        content:
+          "How Rush Autos collects, uses, and protects information when you use our website.",
+      },
     ],
   }),
   component: PrivacyPage,
@@ -23,23 +27,48 @@ function PrivacyPage() {
         <div className="mt-8 space-y-7 leading-relaxed text-muted-foreground">
           <section>
             <h2 className="text-lg font-bold text-foreground">Information we collect</h2>
-            <p className="mt-2">When you submit a car request or inspection request, we collect the details you provide, such as your name, phone number, vehicle preferences, budget, and preferred inspection date. Our website may also collect basic usage and device information through cookies or similar technologies.</p>
+            <p className="mt-2">
+              When you submit a car request or inspection request, we collect the details you
+              provide, such as your name, phone number, vehicle preferences, budget, and preferred
+              inspection date. Our website may also collect basic usage and device information
+              through cookies or similar technologies.
+            </p>
           </section>
           <section>
             <h2 className="text-lg font-bold text-foreground">How we use information</h2>
-            <p className="mt-2">We use your information to respond to enquiries, process vehicle and inspection requests, improve our services, and understand how visitors use our website. We may use analytics and advertising measurement tools, including Google Analytics and Meta Pixel, when configured on the site.</p>
+            <p className="mt-2">
+              We use your information to respond to enquiries, process vehicle and inspection
+              requests, improve our services, and understand how visitors use our website. We may
+              use analytics and advertising measurement tools, including Google Analytics and Meta
+              Pixel, when configured on the site.
+            </p>
           </section>
           <section>
             <h2 className="text-lg font-bold text-foreground">Sharing and storage</h2>
-            <p className="mt-2">We do not sell your personal information. Information may be processed by service providers that help us operate the website, handle requests, or measure site performance. We retain information only as long as reasonably needed for these purposes, legal obligations, or resolving enquiries.</p>
+            <p className="mt-2">
+              We do not sell your personal information. Information may be processed by service
+              providers that help us operate the website, handle requests, or measure site
+              performance. We retain information only as long as reasonably needed for these
+              purposes, legal obligations, or resolving enquiries.
+            </p>
           </section>
           <section>
             <h2 className="text-lg font-bold text-foreground">Your choices</h2>
-            <p className="mt-2">You can contact us to ask about, correct, or request deletion of personal information you have submitted. You can also limit cookies through your browser settings; some site features may not work as expected if you do.</p>
+            <p className="mt-2">
+              You can contact us to ask about, correct, or request deletion of personal information
+              you have submitted. You can also limit cookies through your browser settings; some
+              site features may not work as expected if you do.
+            </p>
           </section>
           <section>
             <h2 className="text-lg font-bold text-foreground">Contact</h2>
-            <p className="mt-2">For privacy questions or requests, contact {BUSINESS.name} at <a href={telLink()} className="font-semibold text-primary underline">{displayPhone()}</a>.</p>
+            <p className="mt-2">
+              For privacy questions or requests, contact {BUSINESS.name} at{" "}
+              <a href={telLink()} className="font-semibold text-primary underline">
+                {displayPhone()}
+              </a>
+              .
+            </p>
           </section>
         </div>
       </main>

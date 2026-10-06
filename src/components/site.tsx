@@ -154,9 +154,15 @@ export function SiteFooter() {
         <p className="opacity-90"><a href={telLink()} className="underline">{displayPhone()}</a></p>
         <p className="pt-2"><Link to="/request" className="font-semibold text-highlight underline">Can't find your car? Request it →</Link></p>
         <nav aria-label="Company" className="flex flex-wrap gap-x-5 gap-y-2 pt-3 text-sm">
-          <Link to="/about" className="underline underline-offset-4">About us</Link>
-          <Link to="/privacy" className="underline underline-offset-4">Privacy policy</Link>
-          <Link to="/contact" className="underline underline-offset-4">Contact us</Link>
+          <Link to="/about" className="underline underline-offset-4">
+            About us
+          </Link>
+          <Link to="/privacy" className="underline underline-offset-4">
+            Privacy policy
+          </Link>
+          <Link to="/contact" className="underline underline-offset-4">
+            Contact us
+          </Link>
         </nav>
         <p className="pt-2 text-xs opacity-60">© {new Date().getFullYear()} {BUSINESS.name}. Abuja, Nigeria.</p>
       </div>
