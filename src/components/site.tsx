@@ -9,8 +9,14 @@ export const absUrl = (u: string) => (u.startsWith("http") ? u : BUSINESS.siteUr
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <Link to="/" className={`font-display text-xl font-extrabold tracking-tight ${className}`}>
-      <span className="text-brand-foreground">Rush</span> <span className="text-highlight">Autos</span>
+    <Link to="/" className={`inline-flex items-center gap-2 font-display text-xl font-extrabold tracking-tight ${className}`}>
+      <img
+        src="/ChatGPT%20Image%20Oct%206,%202026,%2007_16_44%20AM.png"
+        alt=""
+        aria-hidden="true"
+        className="h-10 w-14 shrink-0 rounded-sm object-cover"
+      />
+      <span><span className="text-brand-foreground">Rush</span> <span className="text-highlight">Autos</span></span>
     </Link>
   );
 }
