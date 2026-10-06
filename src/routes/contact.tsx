@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Globe, MapPin, MessageCircle, Phone } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site";
 import { BUSINESS, displayPhone, telLink, waLink } from "@/config/business";
-import { trackContact } from "@/lib/pixel";
+import { trackContact, trackWhatsAppLead } from "@/lib/pixel";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -44,7 +44,7 @@ function ContactPage() {
             href={waLink("Hello Rush Autos, I'd like to make an enquiry.")}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackContact("whatsapp")}
+            onClick={() => trackWhatsAppLead()}
             className="flex items-center gap-4 py-5"
           >
             <MessageCircle className="h-5 w-5 shrink-0 text-primary" />

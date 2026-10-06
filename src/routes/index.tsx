@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
 import { listBrands, listCars, listFiltersSchema, type ListFilters } from "@/lib/cars.functions";
 import { CarCard, SiteFooter, SiteHeader, TrustSection } from "@/components/site";
 import { BUSINESS, waLink } from "@/config/business";
-import { trackContact } from "@/lib/pixel";
+import { trackWhatsAppLead } from "@/lib/pixel";
 
 const carsQuery = (f: ListFilters) =>
   queryOptions({ queryKey: ["cars", f], queryFn: () => listCars({ data: f }), staleTime: 60_000 });
@@ -146,7 +146,7 @@ function Index() {
         {data && data.cars.length === 0 ? (
           <div className="mt-4 rounded-2xl bg-card p-6 text-center shadow-card">
             <p className="font-semibold">No cars match. Clear a filter, or WhatsApp us and we'll source it for you.</p>
-            <a href={waLink("Hello Rush Autos, please help me source a car.")} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp")}
+            <a href={waLink("Hello Rush Autos, please help me source a car.")} target="_blank" rel="noopener" onClick={() => trackWhatsAppLead()}
               className="mt-4 inline-flex h-11 items-center gap-2 rounded-full bg-whatsapp px-5 text-sm font-semibold text-whatsapp-foreground">
               <MessageCircle className="h-4 w-4" />WhatsApp us
             </a>

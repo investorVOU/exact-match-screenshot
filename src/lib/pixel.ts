@@ -43,8 +43,23 @@ export function track(event: MetaEventName, params: Record<string, unknown> = {}
   }
 }
 
-export const trackContact = (method: "call" | "whatsapp", carName?: string) =>
+/** Phone calls only. WhatsApp enquiries are Leads: use trackWhatsAppLead (never both). */
+export const trackContact = (method: "call", carName?: string) =>
   track("Contact", { method, ...(carName ? { content_name: carName } : {}) });
+
+/** A WhatsApp enquiry is a Lead. Pass the vehicle when the button belongs to one. */
+export const trackWhatsAppLead = (car?: { name: string; id?: string }) =>
+  track(
+    "Lead",
+    car
+      ? {
+          content_name: car.name,
+          content_type: "vehicle",
+          ...(car.id ? { content_ids: [car.id] } : {}),
+          method: "whatsapp",
+        }
+      : { method: "whatsapp" },
+  );
 
 /** Inline base code injected in <head> for the given Pixel ID. */
 export const pixelScript = (pixelId: string) =>

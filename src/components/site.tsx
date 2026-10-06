@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Car, Home, MessageCircle, Phone, ShieldCheck, BadgeCheck, FileCheck2, MapPin } from "lucide-react";
 import { BUSINESS, displayPhone, formatNaira, telLink, waLink } from "@/config/business";
-import { trackContact } from "@/lib/pixel";
+import { trackContact, trackWhatsAppLead } from "@/lib/pixel";
 import type { CarCardDTO } from "@/lib/cars.functions";
 
 export const carName = (c: { year: number; make: string; model: string }) => `${c.year} ${c.make} ${c.model}`;
@@ -60,7 +60,7 @@ export function BottomNav() {
         <button className={item} onClick={goHome}><Home className="h-5 w-5" />Home</button>
         <button className={item} onClick={goList}><Car className="h-5 w-5" />Cars</button>
         <a className={item} href={telLink()} onClick={() => trackContact("call")}><Phone className="h-5 w-5" />Call</a>
-        <a className={`${item} bg-whatsapp text-whatsapp-foreground`} href={waLink()} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp")}>
+        <a className={`${item} bg-whatsapp text-whatsapp-foreground`} href={waLink()} target="_blank" rel="noopener" onClick={() => trackWhatsAppLead()}>
           <MessageCircle className="h-5 w-5" />Chat
         </a>
       </div>
@@ -118,7 +118,7 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
             <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-secondary px-1 text-xs font-semibold active:scale-95">
               <Phone className="h-3.5 w-3.5 shrink-0" />Call
             </a>
-            <a href={waLink(msg)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp about ${name}`} title={`WhatsApp about ${name}`} onClick={() => trackContact("whatsapp", name)} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-whatsapp px-1 text-xs font-semibold text-whatsapp-foreground active:scale-95">
+            <a href={waLink(msg)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp about ${name}`} title={`WhatsApp about ${name}`} onClick={() => trackWhatsAppLead({ name, id: car.id })} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-whatsapp px-1 text-xs font-semibold text-whatsapp-foreground active:scale-95">
               <MessageCircle className="h-3.5 w-3.5 shrink-0" /><span className="hidden whitespace-nowrap sm:inline">WhatsApp</span>
             </a>
           </div>

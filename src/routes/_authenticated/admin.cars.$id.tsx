@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, ChevronLeft, ImagePlus, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { askSaleDetails, reportVehicleSale } from "@/lib/record-sale";
 
 export const Route = createFileRoute("/_authenticated/admin/cars/$id")({ component: CarForm });
 
@@ -38,6 +39,7 @@ function CarForm() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(!isNew);
   const dragFrom = useRef<number | null>(null);
+  const savedStatus = useRef<string | null>(null);
 
   useEffect(() => {
     if (isNew) return;
@@ -45,6 +47,7 @@ function CarForm() {
       const { data, error } = await supabase.from("cars").select("*, car_images(id,url,path,position)").eq("id", id).maybeSingle();
       if (error || !data) { toast.error("Car not found"); return navigate({ to: "/admin" }); }
       const { car_images, ...car } = data;
+      savedStatus.current = car.status;
       setF({ ...empty, ...car, price: Number(car.price), color: car.color ?? "", engine_size: car.engine_size ?? "", description: car.description ?? "" });
       setPhotos([...(car_images ?? [])].sort((a, b) => a.position - b.position).map((i) => ({ key: i.id, url: i.url, path: i.path })));
       setLoading(false);
@@ -77,6 +80,10 @@ function CarForm() {
   const save = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!photos.length) { toast.error("Add at least one photo."); return; }
+    // Only an existing car going from not-Sold to Sold is a sale (adding already-sold stock is not).
+    const markingSold = !isNew && savedStatus.current !== "Sold" && f.status === "Sold";
+    const sale = markingSold ? askSaleDetails(`${f.year} ${f.make} ${f.model}`, f.price) : null;
+    if (markingSold && !sale) return;
     setBusy(true);
     try {
       const payload = { ...f, color: f.color || null, engine_size: f.engine_size || null, description: f.description || null };
@@ -91,6 +98,10 @@ function CarForm() {
       } else {
         const { error } = await supabase.from("cars").update(payload).eq("id", id);
         if (error) throw error;
+        if (sale) {
+          savedStatus.current = "Sold";
+          await reportVehicleSale(id, sale);
+        }
       }
 
       const final: { url: string; path: string | null }[] = [];

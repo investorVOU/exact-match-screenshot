@@ -5,6 +5,7 @@ import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira } from "@/config/business";
+import { askSaleDetails, reportVehicleSale } from "@/lib/record-sale";
 
 export const Route = createFileRoute("/_authenticated/admin/")({ component: AdminCars });
 
@@ -21,9 +22,14 @@ function AdminCars() {
   });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-cars"] }); qc.invalidateQueries({ queryKey: ["cars"] }); };
 
-  const toggleSold = async (id: string, status: string) => {
-    const { error } = await supabase.from("cars").update({ status: status === "Sold" ? "Available" : "Sold" }).eq("id", id);
-    if (error) toast.error(error.message); else refresh();
+  const toggleSold = async (c: (typeof cars)[number]) => {
+    const markingSold = c.status !== "Sold";
+    const sale = markingSold ? askSaleDetails(`${c.year} ${c.make} ${c.model}`, Number(c.price)) : null;
+    if (markingSold && !sale) return;
+    const { error } = await supabase.from("cars").update({ status: markingSold ? "Sold" : "Available" }).eq("id", c.id);
+    if (error) { toast.error(error.message); return; }
+    refresh();
+    if (sale) await reportVehicleSale(c.id, sale);
   };
   const remove = async (id: string, name: string) => {
     if (!confirm(`Delete ${name}? This can't be undone.`)) return;
@@ -63,7 +69,7 @@ function AdminCars() {
                 <p className="font-price text-sm font-bold text-primary">{formatNaira(Number(c.price))}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   <Link to="/admin/cars/$id" params={{ id: c.id }} className={`${btn} inline-flex items-center bg-secondary`}>Edit</Link>
-                  <button onClick={() => toggleSold(c.id, c.status)} className={`${btn} ${c.status === "Sold" ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}`}>
+                  <button onClick={() => toggleSold(c)} className={`${btn} ${c.status === "Sold" ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}`}>
                     {c.status === "Sold" ? "Mark available" : "Mark as Sold"}
                   </button>
                   <button onClick={() => remove(c.id, name)} className={`${btn} bg-destructive text-destructive-foreground`}>Delete</button>

@@ -7,7 +7,7 @@ import { getCar } from "@/lib/cars.functions";
 import { CarCard, ConditionBadge, SiteFooter, SiteHeader, absUrl, carName } from "@/components/site";
 import { Gallery } from "@/components/gallery";
 import { formatNaira, telLink, waLink } from "@/config/business";
-import { track, trackContact } from "@/lib/pixel";
+import { track, trackContact, trackWhatsAppLead } from "@/lib/pixel";
 import { supabase } from "@/integrations/supabase/client";
 
 const carQuery = (slug: string) =>
@@ -109,7 +109,7 @@ function CarPage() {
                 <a href={telLink()} onClick={() => trackContact("call", name)} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground active:scale-95">
                   <Phone className="h-4 w-4" />Call now
                 </a>
-                <a href={waLink(`Hello, I'm interested in the ${name} (${price}). Is it available?`)} target="_blank" rel="noopener" onClick={() => trackContact("whatsapp", name)}
+                <a href={waLink(`Hello, I'm interested in the ${name} (${price}). Is it available?`)} target="_blank" rel="noopener" onClick={() => trackWhatsAppLead({ name, id: car.id })}
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp font-semibold text-whatsapp-foreground active:scale-95">
                   <MessageCircle className="h-4 w-4" />WhatsApp
                 </a>
