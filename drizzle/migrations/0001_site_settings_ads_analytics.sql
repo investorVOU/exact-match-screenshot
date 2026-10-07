@@ -1,0 +1,1 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS adsense_client_id text NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS google_analytics_id text NOT NULL DEFAULT '';
