@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronLeft, ImagePlus, Star, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronLeft, ImagePlus, Sparkles, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { askSaleDetails, reportVehicleSale } from "@/lib/record-sale";
+import { generateCarDetails } from "@/lib/ai-car.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/cars/$id")({ component: CarForm });
 
@@ -28,6 +29,18 @@ async function compress(file: File): Promise<Blob> {
   return new Promise((res) => canvas.toBlob((b) => res(b ?? file), "image/jpeg", 0.8));
 }
 
+/** Shrink a photo to ~768px JPEG data URL for AI analysis. */
+async function toSmallDataUrl(src: string): Promise<string> {
+  const blob = await (await fetch(src)).blob();
+  const bmp = await createImageBitmap(blob);
+  const scale = Math.min(1, 768 / Math.max(bmp.width, bmp.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bmp.width * scale);
+  canvas.height = Math.round(bmp.height * scale);
+  canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.75);
+}
+
 function CarForm() {
   const { id } = Route.useParams();
   const isNew = id === "new";
@@ -40,6 +53,8 @@ function CarForm() {
   const [loading, setLoading] = useState(!isNew);
   const dragFrom = useRef<number | null>(null);
   const savedStatus = useRef<string | null>(null);
+  const [hints, setHints] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
 
   useEffect(() => {
     if (isNew) return;
