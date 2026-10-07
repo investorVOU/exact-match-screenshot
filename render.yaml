@@ -21,3 +21,5 @@ services:
         sync: false
       - key: META_CONVERSIONS_API_ACCESS_TOKEN
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false
