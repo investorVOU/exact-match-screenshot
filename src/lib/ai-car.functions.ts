@@ -37,7 +37,7 @@ export const generateCarDetails = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<AiCarDetails> => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Only the admin can use AI.");
-    const key = process.env.LOVABLE_API_KEY;
+    const key = process.env['LOVABLE_API_KEY'];
     if (!key) throw new Error("AI is not configured.");
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {

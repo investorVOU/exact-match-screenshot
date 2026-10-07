@@ -15,3 +15,4 @@
 - Admin pages use the browser client with RLS; admin role is in user_roles and the first signed-up account becomes admin via trigger.
 - car-images bucket is private (workspace blocks public buckets); uploads store a long-lived signed URL in car_images.url plus the storage path.
 - Meta Pixel calls go through src/lib/pixel.ts which no-ops when the ID is missing or blocked.
+- AI car details from photos live in src/lib/ai-car.functions.ts (admin-only server fn, Responses API streamed server-side); keeps the AI key off the browser.
