@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `META_CONVERSIONS_API_ACCESS_TOKEN` in Render. The service-role key and Meta access token are secret and must never use a `VITE_` prefix.
+Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `META_CONVERSIONS_API_ACCESS_TOKEN` in Render. For the admin "Fill with AI" button on Render, also set `OPENAI_API_KEY` (optional `OPENAI_MODEL`, default `gpt-5-mini`). The service-role key and Meta access token are secret and must never use a `VITE_` prefix.
 
 ## Deploy to Render
 
