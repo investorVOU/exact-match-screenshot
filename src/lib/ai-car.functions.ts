@@ -37,14 +37,18 @@ export const generateCarDetails = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<AiCarDetails> => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Only the admin can use AI.");
-    const key = process.env['LOVABLE_API_KEY'];
-    if (!key) throw new Error("AI is not configured.");
+    // On Lovable hosting the managed key is used; elsewhere (e.g. Render) set OPENAI_API_KEY.
+    const lovableKey = process.env['LOVABLE_API_KEY'];
+    const openaiKey = process.env['OPENAI_API_KEY'];
+    if (!lovableKey && !openaiKey) throw new Error("AI is not configured: add OPENAI_API_KEY to your hosting environment variables.");
+    const url = lovableKey ? "https://ai.gateway.lovable.dev/v1/responses" : "https://api.openai.com/v1/responses";
+    const model = lovableKey ? "openai/gpt-6-astra" : (process.env['OPENAI_MODEL'] || "gpt-5-mini");
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    const res = await fetch(url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
+      headers: { Authorization: `Bearer ${lovableKey ?? openaiKey}`, "Content-Type": "application/json", ...(lovableKey ? { "X-Lovable-AIG-SDK": "fetch" } : {}) },
       body: JSON.stringify({
-        model: "openai/gpt-6-astra",
+        model,
         stream: true,
         store: false,
         reasoning: { effort: "low" },
