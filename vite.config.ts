@@ -16,7 +16,9 @@ export default defineConfig(({ command }) => ({
       },
       server: { entry: "server" },
     }),
-    ...(command === "build" ? [nitro({ preset: "node-server" })] : []),
+    ...(command === "build"
+      ? [nitro({ preset: "node-server", output: { dir: "dist" } })]
+      : []),
     react(),
   ],
   resolve: {
