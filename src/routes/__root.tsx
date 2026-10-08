@@ -83,6 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
         { name: "theme-color", content: "#0e5a3a" },
+        { name: "google-site-verification", content: "SyAuze3bj8zWdEHygoYCALHQLHkY4SjKB4pGt657tG8" },
         { title: "Rush Autos — Used cars in Abuja" },
         { name: "description", content: "Foreign used (Tokunbo) and Nigerian used cars in Abuja. Inspect before you pay." },
         { property: "og:site_name", content: "Rush Autos" },
