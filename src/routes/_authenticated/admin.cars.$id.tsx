@@ -95,7 +95,7 @@ function CarForm() {
   const runAi = async () => {
     setAiBusy(true);
     try {
-      const images = await Promise.all(photos.slice(0, 4).map((p) => toSmallDataUrl(p.url)));
+      const images = await Promise.all(photos.slice(0, 3).map((p) => toSmallDataUrl(p.url)));
       const r = await generateCarDetails({ data: { images, hints } });
       setF((p) => ({ ...p, make: r.make || p.make, model: r.model || p.model, year: r.year || p.year, body_type: r.body_type, transmission: r.transmission, fuel: r.fuel, color: r.color || p.color, engine_size: r.engine_size || p.engine_size, description: r.description || p.description }));
       toast.success("Details filled — please check them.");
@@ -203,7 +203,7 @@ function CarForm() {
 
       <section className="rounded-2xl bg-card p-4 shadow-card">
         <h2 className="flex items-center gap-1.5 font-bold"><Sparkles className="h-4 w-4 text-primary" />Fill with AI</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Uses your first 4 photos to fill make, model, year, body, gearbox, fuel, colour, engine and description. Check the result before saving — price and mileage stay yours.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Uses your first 3 photos to fill make, model, year, body, gearbox, fuel, colour, engine and description. Check the result before saving — price and mileage stay yours.</p>
         <input className={`${input} mt-2`} value={hints} onChange={(e) => setHints(e.target.value)} placeholder="Optional hints, e.g. 2018 Lexus RX350, full option" />
         <button type="button" onClick={runAi} disabled={aiBusy || !photos.length} className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-highlight font-bold text-highlight-foreground disabled:opacity-60">
           <Sparkles className="h-4 w-4" />{aiBusy ? "Looking at photos…" : photos.length ? "Generate details from photos" : "Add photos first"}

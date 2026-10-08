@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const inputSchema = z.object({
-  images: z.array(z.string().startsWith("data:image/").max(1_500_000)).min(1).max(4),
+  images: z.array(z.string().startsWith("data:image/").max(1_500_000)).min(1).max(3),
   hints: z.string().max(400).default(""),
 });
 
