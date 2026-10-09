@@ -31,7 +31,7 @@ describe("homepage car card", () => {
       location: "Abuja",
       description: "Great condition",
       status: "Available",
-      images: ["https://example.com/car.jpg"],
+      original_customs_duty: false, images: ["https://example.com/car.jpg"],
     };
 
     render(<CarCard car={car} />);
@@ -59,7 +59,7 @@ describe("homepage car card", () => {
       location: "Lagos",
       description: "Good condition",
       status: "Available",
-      images: ["https://example.com/honda.jpg"],
+      original_customs_duty: false, images: ["https://example.com/honda.jpg"],
     };
 
     render(<CarCard car={car} />);
