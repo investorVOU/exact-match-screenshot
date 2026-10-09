@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Save } from "lucide-react";
+import { BarChart3, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { extractAdsensePublisherId } from "@/lib/adsense";
 import { extractGoogleAnalyticsId } from "@/lib/google-analytics";
+import { getGoogleAnalyticsReport } from "@/lib/google-analytics.functions";
 import { pixelIdValid } from "@/lib/pixel";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
@@ -14,6 +15,12 @@ export const Route = createFileRoute("/_authenticated/admin/settings")({
 
 function AdminSettings() {
   const queryClient = useQueryClient();
+  const analyticsQuery = useQuery({
+    queryKey: ["admin-google-analytics-report"],
+    queryFn: () => getGoogleAnalyticsReport(),
+    staleTime: 5 * 60_000,
+    refetchInterval: 15 * 60_000,
+  });
   const [pixelId, setPixelId] = useState("");
   const [adsenseCode, setAdsenseCode] = useState("");
   const [googleAnalyticsCode, setGoogleAnalyticsCode] = useState("");
@@ -216,6 +223,130 @@ function AdminSettings() {
             {savingGoogleAnalytics ? "Saving…" : "Save Google Analytics"}
           </button>
         </form>
+        <div className="mt-6 border-t border-border pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-bold">
+                <BarChart3 className="h-4 w-4" />
+                Last 28 days
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Visitors, sessions, page views, and top pages from GA4.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void analyticsQuery.refetch()}
+              disabled={analyticsQuery.isFetching}
+              aria-label="Refresh Google Analytics report"
+              title="Refresh report"
+              className="grid h-10 w-10 place-items-center rounded-lg border border-input disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${analyticsQuery.isFetching ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+
+          {analyticsQuery.isPending ? (
+            <p className="mt-5 text-sm text-muted-foreground">Loading Google Analytics…</p>
+          ) : analyticsQuery.isError ? (
+            <p
+              role="alert"
+              className="mt-5 rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {analyticsQuery.error.message}
+            </p>
+          ) : !analyticsQuery.data.configured ? (
+            <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
+              <p className="font-semibold">Reporting is not connected yet.</p>
+              <p className="mt-1 text-muted-foreground">
+                Add these server-side Render environment variables to enable GA4 reports:
+              </p>
+              <ul className="mt-2 list-inside list-disc font-mono text-xs">
+                {analyticsQuery.data.missing.map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Share the GA4 property with the service account as Viewer. Keep the service-account
+                JSON private.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  ["Users", analyticsQuery.data.users],
+                  ["Sessions", analyticsQuery.data.sessions],
+                  ["Page views", analyticsQuery.data.pageViews],
+                  ["Bounce rate", `${(analyticsQuery.data.bounceRate * 100).toFixed(1)}%`],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg bg-muted p-3">
+                    <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-xl font-bold">
+                      {typeof value === "number" ? value.toLocaleString() : value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5">
+                <h4 className="text-sm font-semibold">Daily page views</h4>
+                {analyticsQuery.data.daily.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No page-view data for this period.
+                  </p>
+                ) : (
+                  <div
+                    className="mt-3 flex h-28 items-end gap-1"
+                    role="img"
+                    aria-label="Daily page views over the last 28 days"
+                  >
+                    {analyticsQuery.data.daily.map((day) => {
+                      const max = Math.max(
+                        ...analyticsQuery.data.daily.map((item) => item.views),
+                        1,
+                      );
+                      const height = Math.max(4, (day.views / max) * 100);
+                      return (
+                        <div
+                          key={day.date}
+                          title={`${day.date}: ${day.views.toLocaleString()} views`}
+                          className="min-w-0 flex-1 rounded-t-sm bg-primary/80"
+                          style={{ height: `${height}%` }}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5">
+                <h4 className="text-sm font-semibold">Top pages</h4>
+                {analyticsQuery.data.pages.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No page data for this period.
+                  </p>
+                ) : (
+                  <ul className="mt-2 divide-y divide-border">
+                    {analyticsQuery.data.pages.map((page) => (
+                      <li
+                        key={page.path}
+                        className="flex items-center justify-between gap-3 py-2 text-sm"
+                      >
+                        <span className="min-w-0 truncate" title={page.title}>
+                          {page.path}
+                        </span>
+                        <span className="shrink-0 font-semibold">
+                          {page.views.toLocaleString()}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </section>
     </div>
   );
