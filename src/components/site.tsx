@@ -80,6 +80,7 @@ export function ConditionBadge({ condition }: { condition: string }) {
 export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boolean }) {
   const name = carName(car);
   const sold = car.status === "Sold";
+  const mileageText = Number(car.mileage) > 0 ? Number(car.mileage).toLocaleString() : null;
   const msg = `Hello, I'm interested in the ${name} (${formatNaira(car.price)}). Is it available?`;
   return (
     <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-card shadow-card">
@@ -111,7 +112,7 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
         <Link to="/cars/$slug" params={{ slug: car.slug }} className="line-clamp-2 min-w-0 text-sm font-semibold leading-tight wrap-anywhere">
           {name}
         </Link>
-        <p className="text-[11px] text-muted-foreground">{car.mileage.toLocaleString()} · {car.transmission}</p>
+        <p className="text-[11px] text-muted-foreground">{mileageText ? `${mileageText} · ${car.transmission}` : car.transmission}</p>
         <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" />{car.location}</p>
         {!sold && (
           <div className="mt-auto grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-1.5 pt-2">
