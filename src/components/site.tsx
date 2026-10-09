@@ -97,7 +97,7 @@ export function CarCard({ car, eager = false }: { car: CarCardDTO; eager?: boole
             className={`h-full w-full object-cover ${sold ? "opacity-60 grayscale" : ""}`}
           />
         )}
-        <div className="absolute left-2 top-2"><ConditionBadge condition={car.condition} /></div>
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1"><ConditionBadge condition={car.condition} />{car.original_customs_duty && <DutyBadge />}</div>
         <span className="absolute bottom-2 right-2 rounded-full bg-overlay px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
           {car.images.length} photo{car.images.length === 1 ? "" : "s"}
         </span>
@@ -133,7 +133,7 @@ export function TrustSection() {
   const items = [
     { icon: ShieldCheck, title: "Inspect first", text: "Come see and test-drive before you pay a kobo." },
     { icon: BadgeCheck, title: "Real cars, real prices", text: "Every photo is the actual car. No bait prices." },
-    { icon: FileCheck2, title: "Papers checked", text: "Customs duty and documents verified on every car." },
+    { icon: FileCheck2, title: "Papers checked", text: "Original customs duty papers on cars marked Original Duty — no fake papers." },
   ];
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
@@ -174,5 +174,13 @@ export function SiteFooter() {
         <p className="pt-2 text-xs opacity-60">© {new Date().getFullYear()} {BUSINESS.name}. Abuja, Nigeria.</p>
       </div>
     </footer>
+  );
+}
+
+export function DutyBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+      <FileCheck2 className="h-3 w-3" />Original Duty
+    </span>
   );
 }

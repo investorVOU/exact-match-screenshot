@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CalendarCheck, ChevronLeft, MessageCircle, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { getCar } from "@/lib/cars.functions";
-import { CarCard, ConditionBadge, SiteFooter, SiteHeader, absUrl, carName } from "@/components/site";
+import { CarCard, ConditionBadge, DutyBadge, SiteFooter, SiteHeader, absUrl, carName } from "@/components/site";
 import { Gallery } from "@/components/gallery";
 import { formatNaira, telLink, waLink } from "@/config/business";
 import { track, trackContact, trackWhatsAppLead } from "@/lib/pixel";
@@ -84,6 +84,7 @@ function CarPage() {
     ["Body type", car.body_type],
     ["Location", car.location],
     ["Condition", car.condition],
+    ["Customs duty", car.original_customs_duty ? "Original (verified)" : "Ask us"],
     ["Color", car.color],
     ["Engine", car.engine_size],
   ];
@@ -99,6 +100,7 @@ function CarPage() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <ConditionBadge condition={car.condition} />
+              {car.original_customs_duty && <DutyBadge />}
               {sold && <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">Sold</span>}
             </div>
             <h1 className="mt-2 text-2xl font-extrabold leading-tight wrap-anywhere sm:text-3xl">{name}</h1>
