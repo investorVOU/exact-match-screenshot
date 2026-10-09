@@ -6,6 +6,10 @@ export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
       { title: "Privacy Policy — Rush Autos" },
+      { property: "og:title", content: "Privacy Policy — Rush Autos" },
+      { property: "og:description", content: "How Rush Autos collects, uses, and protects information when you use our website." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         name: "description",
         content:

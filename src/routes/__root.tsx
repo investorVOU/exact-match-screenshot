@@ -18,6 +18,7 @@ import { getSiteSettings } from "@/lib/settings.functions";
 import { googleAnalyticsScript } from "@/lib/google-analytics";
 import { BottomNav } from "@/components/site";
 import { Toaster } from "@/components/ui/sonner";
+import { VisitorNotice } from "@/components/visitor-notice";
 
 function NotFoundComponent() {
   return (
@@ -168,6 +169,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       {!isAdmin && <BottomNav />}
+      {!isAdmin && <VisitorNotice />}
       <Toaster position="top-center" />
     </QueryClientProvider>
   );

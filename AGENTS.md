@@ -16,3 +16,4 @@
 - car-images bucket is private (workspace blocks public buckets); uploads store a long-lived signed URL in car_images.url plus the storage path.
 - Meta Pixel calls go through src/lib/pixel.ts which no-ops when the ID is missing or blocked.
 - AI car details from photos live in src/lib/ai-car.functions.ts (admin-only server fn, Responses API streamed server-side); keeps the AI key off the browser.
+- The visitor notice is mounted in the shared public layout and remembers dismissal in session storage, so direct car-page visitors see it without repeated interruptions while browsing.
