@@ -39,7 +39,7 @@ export function ReviewsSection() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const p = reviewSchema.safeParse(form);
-    if (!p.success) return setErr(p.error.issues[0].message);
+    if (!p.success) return setErr(p.error.issues[0]?.message ?? "Please check the form");
     setBusy(true); setErr("");
     const { error } = await supabase.from("customer_reviews").insert({ ...p.data, location: p.data.location || null, car: p.data.car || null });
     setBusy(false);
