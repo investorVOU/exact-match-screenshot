@@ -6,6 +6,10 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About Rush Autos — Quality Cars. Better Rides." },
+      { property: "og:title", content: "About Rush Autos — Quality Cars. Better Rides." },
+      { property: "og:description", content: "Learn how Rush Autos helps individuals, families, and businesses find quality cars in Nigeria." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         name: "description",
         content:

@@ -5,7 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Admin sign in — Rush Autos" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+    { title: "Admin sign in — Rush Autos" },
+    { name: "description", content: "Sign in to manage Rush Autos cars, enquiries, and settings." },
+    { property: "og:title", content: "Admin sign in — Rush Autos" },
+    { property: "og:description", content: "Sign in to manage Rush Autos cars, enquiries, and settings." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
+  ] }),
   component: AuthPage,
 });
 

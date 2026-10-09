@@ -8,6 +8,10 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact Rush Autos" },
+      { property: "og:title", content: "Contact Rush Autos" },
+      { property: "og:description", content: "Call or WhatsApp Rush Autos for help finding your next car." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         name: "description",
         content: "Call or WhatsApp Rush Autos for help finding your next car.",
