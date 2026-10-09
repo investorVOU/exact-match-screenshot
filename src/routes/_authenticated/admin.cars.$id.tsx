@@ -13,7 +13,7 @@ type Photo = { key: string; url: string; path?: string | null; file?: Blob };
 const MAX_PHOTOS = 12;
 const empty = {
   make: "", model: "", year: new Date().getFullYear() - 8, price: 0, mileage: 0, transmission: "Automatic", fuel: "Petrol",
-  body_type: "Sedan", condition: "Foreign Used", color: "", engine_size: "", location: "Abuja", description: "", status: "Available",
+  body_type: "Sedan", condition: "Foreign Used", color: "", engine_size: "", location: "Abuja", description: "", status: "Available", original_customs_duty: false,
 };
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -224,6 +224,7 @@ function CarForm() {
         <label className={lbl}>Status{sel("status", ["Available", "Sold"])}</label>
         <label className={lbl}>Color<input className={input} value={f.color} onChange={set("color")} /></label>
         <label className={lbl}>Engine size<input className={input} value={f.engine_size} onChange={set("engine_size")} placeholder="2.5L" /></label>
+        <label className="col-span-2 flex items-center gap-3 rounded-xl bg-card p-3 text-sm font-semibold shadow-card"><input type="checkbox" className="h-5 w-5 accent-primary" checked={f.original_customs_duty} onChange={(e) => setF((p) => ({ ...p, original_customs_duty: e.target.checked }))} />Original customs duty (papers verified)</label>
         <label className={`${lbl} col-span-2`}>Location<input required className={input} value={f.location} onChange={set("location")} /></label>
         <label className={`${lbl} col-span-2`}>Description
           <textarea rows={5} className={`${input} h-auto py-2`} value={f.description} onChange={set("description")} />

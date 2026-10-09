@@ -20,11 +20,12 @@ export type CarCardDTO = {
   location: string;
   description: string | null;
   status: string;
+  original_customs_duty: boolean;
   images: string[];
 };
 
 const SELECT =
-  "id,slug,make,model,year,price,mileage,transmission,fuel,body_type,condition,color,engine_size,location,description,status,car_images(url,position)";
+  "id,slug,make,model,year,price,mileage,transmission,fuel,body_type,condition,color,engine_size,location,description,status,original_customs_duty,car_images(url,position)";
 
 type Row = Omit<CarCardDTO, "images"> & { car_images: { url: string; position: number }[] | null };
 const toDTO = (r: Row): CarCardDTO => {

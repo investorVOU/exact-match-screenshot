@@ -15,6 +15,13 @@
       "when": 1791400151738,
       "tag": "0001_site_settings_ads_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791521926220,
+      "tag": "0002_reviews_and_customs_duty",
+      "breakpoints": true
     }
   ]
 }

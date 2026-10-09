@@ -93,6 +93,7 @@ export type Database = {
           make: string
           mileage: number
           model: string
+          original_customs_duty: boolean
           price: number
           slug: string
           status: string
@@ -112,6 +113,7 @@ export type Database = {
           make: string
           mileage?: number
           model: string
+          original_customs_duty?: boolean
           price: number
           slug: string
           status?: string
@@ -131,11 +133,45 @@ export type Database = {
           make?: string
           mileage?: number
           model?: string
+          original_customs_duty?: boolean
           price?: number
           slug?: string
           status?: string
           transmission?: string
           year?: number
+        }
+        Relationships: []
+      }
+      customer_reviews: {
+        Row: {
+          approved: boolean
+          car: string | null
+          comment: string
+          created_at: string
+          id: string
+          location: string | null
+          name: string
+          rating: number
+        }
+        Insert: {
+          approved?: boolean
+          car?: string | null
+          comment: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          name: string
+          rating: number
+        }
+        Update: {
+          approved?: boolean
+          car?: string | null
+          comment?: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          name?: string
+          rating?: number
         }
         Relationships: []
       }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
 import { listBrands, listCars, listFiltersSchema, type ListFilters } from "@/lib/cars.functions";
 import { CarCard, SiteFooter, SiteHeader, TrustSection } from "@/components/site";
+import { ReviewsSection } from "@/components/reviews";
 import { BUSINESS, waLink } from "@/config/business";
 import { trackWhatsAppLead } from "@/lib/pixel";
 
@@ -181,6 +182,7 @@ function Index() {
       </div>
 
       <TrustSection />
+      <ReviewsSection />
       <SiteFooter />
     </div>
   );
