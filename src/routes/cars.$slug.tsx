@@ -78,7 +78,7 @@ function CarPage() {
   };
 
   const specs: [string, string | null][] = [
-    ["Mileage", `${car.mileage.toLocaleString()} km`],
+    ...(Number(car.mileage) > 0 ? [["Mileage", car.mileage.toLocaleString()] as [string, string]] : []),
     ["Gearbox", car.transmission],
     ["Fuel", car.fuel],
     ["Body type", car.body_type],
