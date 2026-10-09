@@ -1,0 +1,2 @@
+- [ ] Add a dismissible visitor notice with nationwide delivery and WhatsApp contact for unlisted cars.
+- [ ] Verify the notice and contact flow; recommend conversion improvements without adding them.
