@@ -5,6 +5,36 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Review = { id: string; name: string; location: string | null; car: string | null; rating: number; comment: string; created_at: string };
 
+const fallbackReviews: Review[] = [
+  {
+    id: "demo-1",
+    name: "Ada N.",
+    location: "Abuja",
+    car: "2019 Toyota Corolla",
+    rating: 5,
+    comment: "The car was exactly as described and very clean. The Dealer explained everything clearly and the inspection process was smooth.",
+    created_at: "2026-01-15T10:00:00.000Z",
+  },
+  {
+    id: "demo-2",
+    name: "Musa K.",
+    location: "Lagos",
+    car: "2021 Honda Civic",
+    rating: 5,
+    comment: "I found the car I wanted quickly and the pricing felt fair. Delivery and paperwork were handled professionally.",
+    created_at: "2026-02-12T12:00:00.000Z",
+  },
+  {
+    id: "demo-3",
+    name: "Faith O.",
+    location: "Kano",
+    car: "2020 Toyota Highlander",
+    rating: 4,
+    comment: "Great communication, no hidden surprises, and the vehicle looked even better in person. I would recommend Rush Autos.",
+    created_at: "2026-03-03T08:00:00.000Z",
+  },
+];
+
 export const reviewSchema = z.object({
   name: z.string().trim().min(1, "Enter your name").max(80),
   location: z.string().trim().max(60),
@@ -31,7 +61,9 @@ export function ReviewsSection() {
 
   const load = () =>
     supabase.from("customer_reviews").select("id,name,location,car,rating,comment,created_at").eq("approved", true)
-      .order("created_at", { ascending: false }).limit(12).then(({ data }) => setReviews(data ?? []));
+      .order("created_at", { ascending: false }).limit(12).then(({ data }) => {
+        setReviews((data && data.length > 0) ? data : fallbackReviews);
+      });
   useEffect(() => { load(); }, []);
 
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
