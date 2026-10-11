@@ -303,7 +303,7 @@ function AdminSettings() {
                   >
                     {analyticsQuery.data.daily.map((day) => {
                       const max = Math.max(
-                        ...analyticsQuery.data.daily.map((item) => item.views),
+                        ...(analyticsQuery.data.daily ?? []).map((item) => item.views),
                         1,
                       );
                       const height = Math.max(4, (day.views / max) * 100);
